@@ -1,0 +1,30 @@
+<div class="login-container">
+    <!-- Left Section -->
+    <div class="left-panel">
+      <img src="/saffron.jpeg" alt="Saffron Flower" />
+    </div>
+  
+    <!-- Right Section -->
+    <div class="right-panel">
+      <h1>WELCOME BACK</h1>
+  
+      <!-- Role Tabs -->
+      <div class="role-tabs">
+        <button [class.active]="role==='customer'" (click)="role='customer'">Customer</button>
+        <button [class.active]="role==='seller'" (click)="role='seller'">Seller</button>
+        <button [class.active]="role==='admin'" (click)="role='admin'">Admin</button>
+      </div>
+  
+      <!-- Login Form -->
+      <form>
+        <input type="email" placeholder="Email" />
+        <input type="password" placeholder="Password" />
+  
+        <a class="forgot">Forgot Password?</a>
+  
+        <button class="login-btn">LOG IN</button>
+        <p class="loading">Logging in...</p>
+      </form>
+    </div>
+  </div>
+  
