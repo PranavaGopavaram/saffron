@@ -7,24 +7,56 @@
     <!-- Right Section -->
     <div class="right-panel">
       <h1>WELCOME BACK</h1>
-  
-      <!-- Role Tabs -->
-      <div class="role-tabs">
-        <button [class.active]="role==='customer'" (click)="role='customer'">Customer</button>
-        <button [class.active]="role==='seller'" (click)="role='seller'">Seller</button>
-        <button [class.active]="role==='admin'" (click)="role='admin'">Admin</button>
+
+      <!-- Error Message -->
+      <div class="error-message" *ngIf="errorMessage">
+        ❌ {{ errorMessage }}
+      </div>
+
+      <!-- Success Message -->
+      <div class="success-message" *ngIf="successMessage">
+        ✅ {{ successMessage }}
       </div>
   
       <!-- Login Form -->
-      <form>
-        <input type="email" placeholder="Email" />
-        <input type="password" placeholder="Password" />
+      <form (ngSubmit)="onLogin()">
+        <input 
+          type="email" 
+          placeholder="Email Address" 
+          [(ngModel)]="email"
+          name="email"
+          [disabled]="isLoading"
+          required
+        />
+        <input 
+          type="password" 
+          placeholder="Password"
+          [(ngModel)]="password"
+          name="password"
+          [disabled]="isLoading"
+          required
+        />
   
         <a class="forgot">Forgot Password?</a>
   
-        <button class="login-btn">LOG IN</button>
-        <p class="loading">Logging in...</p>
+        <button 
+          type="submit" 
+          class="login-btn"
+          [disabled]="isLoading"
+        >
+          <span *ngIf="!isLoading">LOG IN</span>
+          <span *ngIf="isLoading">LOGGING IN...</span>
+        </button>
       </form>
+
+      <!-- Loading Spinner -->
+      <div class="loading-spinner" *ngIf="isLoading">
+        <div class="spinner"></div>
+      </div>
+
+      <p class="signup-link">
+        Don't have an account? <a routerLink="/auth/registration">Sign up</a>
+      </p>
     </div>
   </div>
   

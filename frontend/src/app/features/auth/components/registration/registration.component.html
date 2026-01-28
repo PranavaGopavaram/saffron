@@ -1,0 +1,342 @@
+<div class="registration-container">
+  <!-- Left Section -->
+  <div class="left-panel">
+    <img src="/saffron.jpeg" alt="Saffron Flower" />
+  </div>
+
+  <!-- Right Section -->
+  <div class="right-panel">
+    <h1>CREATE YOUR ACCOUNT</h1>
+
+    <!-- Error Message -->
+    <div class="error-banner" *ngIf="errorMessage">
+      {{ errorMessage }}
+    </div>
+
+    <!-- Success Message -->
+    <div class="success-banner" *ngIf="successMessage">
+      ✅ {{ successMessage }}
+    </div>
+
+    <!-- Registration Form -->
+    <form [formGroup]="registrationForm" (ngSubmit)="onSubmit()">
+      
+      <!-- Section 1: Basic Information -->
+      <div class="form-section">
+        <input 
+          formControlName="fullName" 
+          type="text"
+          placeholder="Full Name" 
+          [class.invalid]="hasError('fullName')"
+        />
+        <div class="error" *ngIf="hasError('fullName', 'required')">
+          Full name is required
+        </div>
+        <div class="error" *ngIf="hasError('fullName', 'minlength')">
+          Full name must be at least 2 characters
+        </div>
+
+        <input 
+          formControlName="email" 
+          type="email"
+          placeholder="Email Address" 
+          [class.invalid]="hasError('email')"
+        />
+        <div class="error" *ngIf="hasError('email', 'required')">
+          Email is required
+        </div>
+        <div class="error" *ngIf="hasError('email', 'email')">
+          Please enter a valid email address
+        </div>
+
+        <div class="select-wrapper">
+          <select formControlName="role" [class.invalid]="hasError('role')">
+            <option value="" disabled>Select Role</option>
+            <option value="buyer">Buyer</option>
+            <option value="seller">Seller</option>
+          </select>
+        </div>
+        <div class="error" *ngIf="hasError('role')">
+          Please select a role
+        </div>
+      </div>
+
+      <!-- Section 2: Buyer-Specific Fields -->
+      <ng-container *ngIf="currentRole === 'buyer'">
+        <div class="form-section buyer-section">
+          <h3 class="section-title">Contact Information</h3>
+          
+          <input 
+            formControlName="phone" 
+            type="tel"
+            placeholder="Phone Number" 
+            [class.invalid]="hasError('phone')"
+          />
+          <div class="error" *ngIf="hasError('phone')">
+            Phone number is required
+          </div>
+
+          <input 
+            formControlName="companyName" 
+            type="text"
+            placeholder="Company Name (Optional)" 
+          />
+
+          <h3 class="section-title">Shipping Address</h3>
+          
+          <input 
+            formControlName="shippingStreet" 
+            type="text"
+            placeholder="Street Address" 
+            [class.invalid]="hasError('shippingStreet')"
+          />
+          <div class="error" *ngIf="hasError('shippingStreet')">
+            Street address is required
+          </div>
+
+          <div class="form-row">
+            <div class="form-col">
+              <input 
+                formControlName="shippingCity" 
+                type="text"
+                placeholder="City" 
+                [class.invalid]="hasError('shippingCity')"
+              />
+              <div class="error" *ngIf="hasError('shippingCity')">
+                City is required
+              </div>
+            </div>
+            <div class="form-col">
+              <input 
+                formControlName="shippingState" 
+                type="text"
+                placeholder="State/Province" 
+                [class.invalid]="hasError('shippingState')"
+              />
+              <div class="error" *ngIf="hasError('shippingState')">
+                State is required
+              </div>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-col">
+              <input 
+                formControlName="shippingZip" 
+                type="text"
+                placeholder="Zip/Postal Code" 
+                [class.invalid]="hasError('shippingZip')"
+              />
+              <div class="error" *ngIf="hasError('shippingZip')">
+                Zip code is required
+              </div>
+            </div>
+            <div class="form-col">
+              <input 
+                formControlName="shippingCountry" 
+                type="text"
+                placeholder="Country" 
+                [class.invalid]="hasError('shippingCountry')"
+              />
+              <div class="error" *ngIf="hasError('shippingCountry')">
+                Country is required
+              </div>
+            </div>
+          </div>
+        </div>
+      </ng-container>
+
+      <!-- Section 3: Seller-Specific Fields -->
+      <ng-container *ngIf="currentRole === 'seller'">
+        <div class="form-section seller-section">
+          <h3 class="section-title">Contact Information</h3>
+          
+          <input 
+            formControlName="phone" 
+            type="tel"
+            placeholder="Phone Number" 
+            [class.invalid]="hasError('phone')"
+          />
+          <div class="error" *ngIf="hasError('phone')">
+            Phone number is required
+          </div>
+
+          <input 
+            formControlName="businessName" 
+            type="text"
+            placeholder="Business Name" 
+            [class.invalid]="hasError('businessName')"
+          />
+          <div class="error" *ngIf="hasError('businessName')">
+            Business name is required
+          </div>
+
+          <h3 class="section-title">Business Address</h3>
+          
+          <input 
+            formControlName="businessStreet" 
+            type="text"
+            placeholder="Street Address" 
+            [class.invalid]="hasError('businessStreet')"
+          />
+          <div class="error" *ngIf="hasError('businessStreet')">
+            Street address is required
+          </div>
+
+          <div class="form-row">
+            <div class="form-col">
+              <input 
+                formControlName="businessCity" 
+                type="text"
+                placeholder="City" 
+                [class.invalid]="hasError('businessCity')"
+              />
+              <div class="error" *ngIf="hasError('businessCity')">
+                City is required
+              </div>
+            </div>
+            <div class="form-col">
+              <input 
+                formControlName="businessState" 
+                type="text"
+                placeholder="State/Province" 
+                [class.invalid]="hasError('businessState')"
+              />
+              <div class="error" *ngIf="hasError('businessState')">
+                State is required
+              </div>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-col">
+              <input 
+                formControlName="businessZip" 
+                type="text"
+                placeholder="Zip/Postal Code" 
+                [class.invalid]="hasError('businessZip')"
+              />
+              <div class="error" *ngIf="hasError('businessZip')">
+                Zip code is required
+              </div>
+            </div>
+            <div class="form-col">
+              <input 
+                formControlName="businessCountry" 
+                type="text"
+                placeholder="Country" 
+                [class.invalid]="hasError('businessCountry')"
+              />
+              <div class="error" *ngIf="hasError('businessCountry')">
+                Country is required
+              </div>
+            </div>
+          </div>
+
+          <h3 class="section-title">Verification Details</h3>
+          
+          <input 
+            formControlName="taxId" 
+            type="text"
+            placeholder="Tax ID / Business License Number" 
+            [class.invalid]="hasError('taxId')"
+          />
+          <div class="error" *ngIf="hasError('taxId')">
+            Tax ID / Business License is required
+          </div>
+
+          <textarea 
+            formControlName="saffronSource" 
+            placeholder="Saffron Source/Origin (Describe your saffron source, farm location, etc.)" 
+            rows="4"
+            [class.invalid]="hasError('saffronSource')"
+          ></textarea>
+          <div class="error" *ngIf="hasError('saffronSource', 'required')">
+            Saffron source information is required
+          </div>
+          <div class="error" *ngIf="hasError('saffronSource', 'minlength')">
+            Please provide at least 10 characters describing your saffron source
+          </div>
+
+          <div class="file-upload-section">
+            <label class="file-label">Certifications (Optional)</label>
+            <p class="file-hint">Upload up to 5 PDF files, max 5MB each</p>
+            
+            <input 
+              type="file" 
+              accept=".pdf"
+              multiple
+              (change)="onFileSelected($event)"
+              #fileInput
+              class="file-input"
+            />
+            
+            <button type="button" class="file-button" (click)="fileInput.click()">
+              <span class="file-icon">📁</span>
+              Choose Files
+            </button>
+            
+            <!-- Display selected files -->
+            <div class="selected-files" *ngIf="selectedFiles.length > 0">
+              <div *ngFor="let file of selectedFiles; let i = index" class="file-item">
+                <div class="file-info">
+                  <span class="file-name">{{ file.name }}</span>
+                  <span class="file-size">{{ getFileSize(file.size) }}</span>
+                </div>
+                <button type="button" class="remove-btn" (click)="removeFile(i)">
+                  ✕
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </ng-container>
+
+      <!-- Section 4: Password -->
+      <div class="form-section password-section">
+        <h3 class="section-title">Security</h3>
+        
+        <input 
+          formControlName="password" 
+          type="password"
+          placeholder="Password (Minimum 6 characters)" 
+          [class.invalid]="hasError('password')"
+        />
+        <div class="error" *ngIf="hasError('password', 'required')">
+          Password is required
+        </div>
+        <div class="error" *ngIf="hasError('password', 'minlength')">
+          Password must be at least 6 characters
+        </div>
+
+        <input 
+          formControlName="confirmPassword" 
+          type="password"
+          placeholder="Confirm Password" 
+          [class.invalid]="hasError('confirmPassword') || hasPasswordMismatch()"
+        />
+        <div class="error" *ngIf="hasError('confirmPassword', 'required')">
+          Please confirm your password
+        </div>
+        <div class="error" *ngIf="hasPasswordMismatch()">
+          Passwords do not match
+        </div>
+      </div>
+
+      <!-- Submit Button -->
+      <button 
+        type="submit" 
+        class="signup-btn" 
+        [disabled]="isLoading"
+        [class.loading]="isLoading"
+      >
+        <span *ngIf="!isLoading">SIGN UP</span>
+        <span *ngIf="isLoading">SIGNING UP...</span>
+      </button>
+    </form>
+
+    <p class="login-link">
+      Already have an account? <a routerLink="/auth/login">Log in</a>
+    </p>
+  </div>
+</div>
