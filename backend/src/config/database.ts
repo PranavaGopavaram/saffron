@@ -3,7 +3,6 @@ import { config } from './env';
 
 /**
  * MySQL connection pool
- * Uses Promise-based API for async/await support
  */
 export const pool = mysql.createPool({
   host: config.database.host,

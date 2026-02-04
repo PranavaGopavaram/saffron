@@ -38,6 +38,12 @@ export const routes: Routes = [
     data: { roles: ['admin'] }
   },
   
+  // Landing page (public)
+  {
+    path: 'landing',
+    loadChildren: () => import('./features/landing/landing.routes').then(m => m.LANDING_ROUTES)
+  },
+  
   // Fallback - redirect unknown routes to login
   { path: '**', redirectTo: '/auth/login' }
 ];
