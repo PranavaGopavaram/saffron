@@ -1,10 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
 import { validationResult } from 'express-validator';
-
-/**
- * Validation Middleware
- * Checks for validation errors from express-validator
- */
 export const validate = (
   req: Request,
   res: Response,
@@ -23,6 +18,5 @@ export const validate = (
     });
     return;
   }
-  
   next();
 };

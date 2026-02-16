@@ -140,7 +140,7 @@ CREATE TABLE saffron_products (
   product_name VARCHAR(255) NOT NULL,
   description TEXT,
   origin VARCHAR(100),
-  grade CHAR(1),
+  grade ENUM('premium', 'first', 'second', 'third'),
   color_rating INT CHECK (color_rating BETWEEN 1 AND 10),
   aroma_score INT CHECK (aroma_score BETWEEN 1 AND 10),
   iso_certification BOOLEAN DEFAULT FALSE,

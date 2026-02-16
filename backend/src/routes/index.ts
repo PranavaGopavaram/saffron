@@ -1,17 +1,19 @@
 import { Router } from 'express';
 import authRoutes from './auth.routes';
+import productRoutes from './product.routes';
+import cartRoutes from './cart.routes';
+import orderRoutes from './order.routes';
+import marketplaceRoutes from './marketplace.routes';
+import reviewRoutes from './review.routes';
 
 const router = Router();
 
-/**
- * Mount all route modules
- */
 router.use('/auth', authRoutes);
-
-/**
- * Health check route for API
- * GET /api/health
- */
+router.use('/products', productRoutes);
+router.use('/cart', cartRoutes);
+router.use('/orders', orderRoutes);
+router.use('/marketplace', marketplaceRoutes);
+router.use('/reviews', reviewRoutes);
 router.get('/health', (req, res) => {
   res.json({
     success: true,
@@ -19,5 +21,4 @@ router.get('/health', (req, res) => {
     timestamp: new Date().toISOString(),
   });
 });
-
 export default router;

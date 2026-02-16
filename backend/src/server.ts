@@ -4,6 +4,7 @@ import cors from 'cors';
 import { config } from './config/env';
 import { testConnection, pool } from './config/database';
 import routes from './routes';
+import { errorHandler, notFoundHandler } from './middleware/error.middleware';
 
 const app = express();
 
@@ -86,14 +87,15 @@ app.get('/health', async (req: Request, res: Response) => {
 
 /**
  * 404 handler - Route not found
+ * Must be registered after all routes
  */
-app.use((req: Request, res: Response) => {
-  res.status(404).json({
-    error: 'Route not found',
-    path: req.path,
-    method: req.method,
-  });
-});
+app.use(notFoundHandler);
+
+/**
+ * Global error handler
+ * Must be registered last in middleware chain
+ */
+app.use(errorHandler);
 
 /**
  * Start server with database connection test
@@ -118,6 +120,7 @@ const startServer = async () => {
       console.log(`  API Base:        http://localhost:${config.server.port}/api`);
       console.log(`  Register:        http://localhost:${config.server.port}/api/auth/register`);
       console.log(`  Login:           http://localhost:${config.server.port}/api/auth/login`);
+      console.log(`  Products:        http://localhost:${config.server.port}/api/products`);
       console.log('\n✓ Ready to accept connections\n');
     });
     

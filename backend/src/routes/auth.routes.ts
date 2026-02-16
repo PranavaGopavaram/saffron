@@ -7,29 +7,19 @@ import { validate } from '../middleware/validate.middleware';
 const router = Router();
 const authController = new AuthController();
 
-/**
- * @route   POST /api/auth/register
- * @desc    Register a new user (buyer or seller)
- * @access  Public
- */
+
 router.post(
   '/register',
-  uploadMiddleware.array('certifications', 5), // Handle file uploads (max 5 files)
-  validateRegistration,                         // Validate registration data
-  validate,                                     // Check for validation errors
-  authController.register                       // Handle registration
+  uploadMiddleware.array('certifications', 5), 
+  validateRegistration,                         
+  validate,                                    
+  authController.register                       
 );
-
-/**
- * @route   POST /api/auth/login
- * @desc    Login existing user
- * @access  Public
- */
 router.post(
   '/login',
-  validateLogin,              // Validate login data
-  validate,                   // Check for validation errors
-  authController.login        // Handle login
+  validateLogin,            
+  validate,                 
+  authController.login       
 );
 
 export default router;

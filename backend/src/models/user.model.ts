@@ -1,8 +1,3 @@
-/**
- * User Model - TypeScript Interfaces
- * Defines types for User, Address, and related data structures
- */
-
 export interface User {
   id: number;
   email: string;
