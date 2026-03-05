@@ -28,19 +28,78 @@ export const createProductValidator = [
 
   body('color_rating')
     .isInt({ min: 1, max: 10 })
-    .withMessage('Color rating must be between 1 and 10'),
+    .withMessage('Color rating must be between 1 and 10')
+    .toInt(),
 
   body('aroma_score')
     .isInt({ min: 1, max: 10 })
-    .withMessage('Aroma score must be between 1 and 10'),
+    .withMessage('Aroma score must be between 1 and 10')
+    .toInt(),
 
   body('iso_certification')
     .isBoolean()
-    .withMessage('ISO certification must be a boolean'),
+    .withMessage('ISO certification must be a boolean')
+    .toBoolean(),
 
   body('moisture_level')
     .isFloat({ min: 0, max: 100 })
-    .withMessage('Moisture level must be between 0 and 100 percent'),
+    .withMessage('Moisture level must be between 0 and 100 percent')
+    .toFloat(),
+];
+
+export const updateProductValidator = [
+  body('product_name')
+    .optional()
+    .trim()
+    .notEmpty()
+    .withMessage('Product name cannot be empty')
+    .isLength({ min: 3, max: 100 })
+    .withMessage('Product name must be between 3 and 100 characters'),
+
+  body('description')
+    .optional()
+    .trim()
+    .notEmpty()
+    .withMessage('Description cannot be empty')
+    .isLength({ min: 10, max: 1000 })
+    .withMessage('Description must be between 10 and 1000 characters'),
+
+  body('origin')
+    .optional()
+    .trim()
+    .notEmpty()
+    .withMessage('Origin cannot be empty')
+    .isLength({ min: 2, max: 100 })
+    .withMessage('Origin must be between 2 and 100 characters'),
+
+  body('grade')
+    .optional()
+    .isIn(['premium', 'first', 'second', 'third'])
+    .withMessage('Grade must be one of: premium, first, second, third'),
+
+  body('color_rating')
+    .optional()
+    .isInt({ min: 1, max: 10 })
+    .withMessage('Color rating must be between 1 and 10')
+    .toInt(),
+
+  body('aroma_score')
+    .optional()
+    .isInt({ min: 1, max: 10 })
+    .withMessage('Aroma score must be between 1 and 10')
+    .toInt(),
+
+  body('iso_certification')
+    .optional()
+    .isBoolean()
+    .withMessage('ISO certification must be a boolean')
+    .toBoolean(),
+
+  body('moisture_level')
+    .optional()
+    .isFloat({ min: 0, max: 100 })
+    .withMessage('Moisture level must be between 0 and 100 percent')
+    .toFloat(),
 ];
 
 export const createVariantValidator = [

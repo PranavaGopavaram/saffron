@@ -45,12 +45,6 @@ class ProductService extends MarketplaceBaseService {
     {
     const sellerId = await this.getSellerIdFromUserId(userId);
 
-    const verified = await this.isSellerVerified(userId);
-    if (!verified) {
-      throw new ForbiddenError(
-        'Seller must be verified before listing products'
-      );
-    }
     const product = await this.withTransaction(async (connection) => {
       const [result] = await connection.query(
         `INSERT INTO saffron_products 
@@ -212,13 +206,26 @@ class ProductService extends MarketplaceBaseService {
       'moisture_level',
     ];
 
+    // Type coercion map to ensure correct types for MySQL
+    const typeCoercions: Record<string, (val: any) => any> = {
+      color_rating: (v) => parseInt(v, 10),
+      aroma_score: (v) => parseInt(v, 10),
+      iso_certification: (v) =>
+        typeof v === 'string' ? v === 'true' || v === '1' : Boolean(v),
+      moisture_level: (v) => parseFloat(v),
+    };
+
     const setClauses: string[] = [];
     const updateParams: any[] = [];
 
     for (const field of allowedFields) {
       if ((data as any)[field] !== undefined) {
+        let value = (data as any)[field];
+        if (typeCoercions[field]) {
+          value = typeCoercions[field](value);
+        }
         setClauses.push(`${field} = ?`);
-        updateParams.push((data as any)[field]);
+        updateParams.push(value);
       }
     }
 

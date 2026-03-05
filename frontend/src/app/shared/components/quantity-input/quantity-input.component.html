@@ -1,0 +1,33 @@
+<div class="quantity-input" [ngClass]="'size-' + size" [class.disabled]="disabled">
+  <button 
+    type="button"
+    class="quantity-btn decrement"
+    (click)="decrement()"
+    [disabled]="disabled || quantity <= min"
+    aria-label="Decrease quantity">
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <path d="M19 13H5v-2h14v2z"/>
+    </svg>
+  </button>
+  
+  <input
+    type="number"
+    class="quantity-value"
+    [value]="quantity"
+    [min]="min"
+    [max]="max"
+    [disabled]="disabled"
+    (change)="onInputChange($event)"
+    aria-label="Quantity" />
+  
+  <button 
+    type="button"
+    class="quantity-btn increment"
+    (click)="increment()"
+    [disabled]="disabled || quantity >= max"
+    aria-label="Increase quantity">
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+    </svg>
+  </button>
+</div>

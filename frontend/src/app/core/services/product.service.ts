@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { tap, catchError } from 'rxjs/operators';
-import { environment } from '../../../../environments/environment';
+import { environment } from '../../../environments/environment';
 import { 
   Product,
   ProductVariant,
@@ -11,7 +11,7 @@ import {
   CreateVariantRequest,
   ProductGrade,
   ApiResponse
-} from '../../landing/models/marketplace.model';
+} from '../../features/landing/models/marketplace.model';
 
 @Injectable({
   providedIn: 'root'

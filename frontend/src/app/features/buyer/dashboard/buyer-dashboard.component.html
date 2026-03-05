@@ -1,12 +1,74 @@
 <div class="dashboard-container">
   <header class="dashboard-header">
-    <h1>Buyer Dashboard</h1>
+    <div class="header-left">
+      <h1>Saffron Marketplace</h1>
+      <span class="welcome-text" *ngIf="user()">Welcome, {{ user()?.fullName }}</span>
+    </div>
+    <nav class="header-nav">
+      <a routerLink="/buyer/products" routerLinkActive="active" class="nav-link">🛍️ Browse Products</a>
+      <a routerLink="/buyer/cart" routerLinkActive="active" class="nav-link">
+        🛒 Cart 
+      </a>
+      <a routerLink="/buyer/orders" routerLinkActive="active" class="nav-link">📦 My Orders</a>
+    </nav>
     <button class="logout-btn" (click)="onLogout()">Logout</button>
   </header>
 
   <div class="dashboard-content">
-    <div class="comimg soon">
-      <h2>Dashboard Components Yet to be Built</h2>
+    <div class="stats-grid">
+      <div class="stat-card" routerLink="/buyer/orders">
+        <span class="stat-value">{{ orderStats().total }}</span>
+        <span class="stat-label">Total Orders</span>
+      </div>
+      <div class="stat-card" routerLink="/buyer/orders" [queryParams]="{status: 'pending'}">
+        <span class="stat-value">{{ orderStats().pending }}</span>
+        <span class="stat-label">Pending</span>
+      </div>
+      <div class="stat-card" routerLink="/buyer/orders" [queryParams]="{status: 'shipped'}">
+        <span class="stat-value">{{ orderStats().shipped }}</span>
+        <span class="stat-label">In Transit</span>
+      </div>
+      <div class="stat-card" routerLink="/buyer/orders" [queryParams]="{status: 'delivered'}">
+        <span class="stat-value">{{ orderStats().delivered }}</span>
+        <span class="stat-label">Delivered</span>
+      </div>
     </div>
+
+    <section class="quick-actions">
+      <h2>Quick Actions</h2>
+      <div class="action-cards">
+        <a routerLink="/buyer/products" class="action-card primary">
+          <h3>🌸 Browse Saffron</h3>
+          <p>Explore premium saffron from verified sellers</p>
+        </a>
+        <a routerLink="/buyer/cart" class="action-card" *ngIf="cartItemCount() > 0">
+          <h3>🛒 Continue Shopping</h3>
+          <p>{{ cartItemCount() }} item(s) waiting in your cart</p>
+        </a>
+        <a routerLink="/buyer/addresses" class="action-card">
+          <h3>📍 Manage Addresses</h3>
+          <p>Add or update your shipping details</p>
+        </a>
+      </div>
+    </section>
+
+    <section class="featured-section">
+      <h2>Shop by Origin</h2>
+      <div class="origin-cards">
+        <a *ngFor="let loc of [{id:'Iran', f:'🇮🇷', n:'Persian'}, {id:'India', f:'🇮🇳', n:'Kashmiri'}, {id:'Spain', f:'🇪🇸', n:'Spanish'}]" 
+           [routerLink]="['/buyer/products']" [queryParams]="{origin: loc.id}" class="origin-card">
+          <span class="origin-flag">{{loc.f}}</span> {{loc.n}}
+        </a>
+      </div>
+    </section>
+
+    <section class="featured-section">
+      <h2>Shop by Grade</h2>
+      <div class="grade-cards">
+        <a routerLink="/buyer/products" [queryParams]="{grade: 'premium'}" class="grade-card premium">Premium</a>
+        <a routerLink="/buyer/products" [queryParams]="{grade: 'first'}" class="grade-card first">Grade I</a>
+        <a routerLink="/buyer/products" [queryParams]="{grade: 'second'}" class="grade-card second">Grade II</a>
+      </div>
+    </section>
   </div>
 </div>

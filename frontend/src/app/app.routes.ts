@@ -2,25 +2,70 @@ import { Routes } from '@angular/router';
 import { authGuard, roleGuard } from './core/guards/auth.guard';
 
 export const routes: Routes = [
-  // Redirect root to login
+
   { path: '', redirectTo: '/auth/login', pathMatch: 'full' },
   
-  // Auth routes (public)
+
   { 
     path: 'auth', 
     loadChildren: () => import('./features/auth/auth.routes').then(m => m.AUTH_ROUTES)
   },
   
-  // Buyer routes (protected)
+
   {
-    path: 'buyer/dashboard',
-    loadComponent: () => import('./features/buyer/dashboard/buyer-dashboard.component')
-      .then(m => m.BuyerDashboardComponent),
+    path: 'buyer',
     canActivate: [authGuard, roleGuard],
-    data: { roles: ['buyer', 'admin'] }
+    data: { roles: ['buyer', 'admin'] },
+    children: [
+      {
+        path: 'dashboard',
+        loadComponent: () => import('./features/buyer/dashboard/buyer-dashboard.component')
+          .then(m => m.BuyerDashboardComponent)
+      },
+      {
+        path: 'products',
+        loadComponent: () => import('./features/buyer/products/product-list/product-list.component')
+          .then(m => m.ProductListComponent)
+      },
+      {
+        path: 'products/:id',
+        loadComponent: () => import('./features/buyer/products/product-detail/product-detail.component')
+          .then(m => m.ProductDetailComponent)
+      },
+      {
+        path: 'cart',
+        loadComponent: () => import('./features/buyer/cart/cart.component')
+          .then(m => m.CartComponent)
+      },
+      {
+        path: 'checkout',
+        loadComponent: () => import('./features/buyer/checkout/checkout.component')
+          .then(m => m.CheckoutComponent)
+      },
+      {
+        path: 'orders',
+        loadComponent: () => import('./features/buyer/orders/order-list/order-list.component')
+          .then(m => m.OrderListComponent)
+      },
+      {
+        path: 'orders/:id',
+        loadComponent: () => import('./features/buyer/orders/order-detail/order-detail.component')
+          .then(m => m.OrderDetailComponent)
+      },
+      {
+        path: 'addresses',
+        loadComponent: () => import('./features/buyer/addresses/address-list/address-list.component')
+          .then(m => m.AddressListComponent)
+      },
+      {
+        path: '',
+        redirectTo: 'dashboard',
+        pathMatch: 'full'
+      }
+    ]
   },
   
-  // Seller routes (protected)
+
   {
     path: 'seller/dashboard',
     loadComponent: () => import('./features/seller/dashboard/seller-dashboard.component')
@@ -29,7 +74,7 @@ export const routes: Routes = [
     data: { roles: ['seller', 'admin'] }
   },
   
-  // Admin routes (protected)
+
   {
     path: 'admin/dashboard',
     loadComponent: () => import('./features/admin/dashboard/admin-dashboard.component')
@@ -38,12 +83,12 @@ export const routes: Routes = [
     data: { roles: ['admin'] }
   },
   
-  // Landing page (public)
+
   {
     path: 'landing',
     loadChildren: () => import('./features/landing/landing.routes').then(m => m.LANDING_ROUTES)
   },
   
-  // Fallback - redirect unknown routes to login
+  
   { path: '**', redirectTo: '/auth/login' }
 ];

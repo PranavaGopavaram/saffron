@@ -1,3 +1,6 @@
+// Re-export ApiResponse from auth model for convenience
+export type { ApiResponse, ApiError } from '../../../core/models/auth.model';
+
 export enum ProductGrade {
   PREMIUM = 'premium',
   FIRST = 'first',
@@ -244,11 +247,7 @@ export interface ReviewSummary {
   averageRating: number;
   totalReviews: number;
   ratingBreakdown: {
-    1: number;
-    2: number;
-    3: number;
-    4: number;
-    5: number;
+    [key: number]: number;
   };
 }
 

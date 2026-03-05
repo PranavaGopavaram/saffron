@@ -1,0 +1,338 @@
+<div class="checkout-container">
+  <!-- Header -->
+  <header class="checkout-header">
+    <div class="header-content">
+      <a routerLink="/buyer/cart" class="back-link" *ngIf="currentStep !== 'confirmation'">
+        <span class="back-icon">&larr;</span>
+        Back to Cart
+      </a>
+      <h1>{{ currentStep === 'confirmation' ? 'Order Confirmed!' : 'Checkout' }}</h1>
+    </div>
+
+    <!-- Progress Steps -->
+    <div class="progress-steps" *ngIf="currentStep !== 'confirmation'">
+      <div class="step" [class.active]="currentStep === 'address'" [class.completed]="currentStep === 'review'">
+        <span class="step-number">1</span>
+        <span class="step-label">Shipping</span>
+      </div>
+      <div class="step-connector" [class.completed]="currentStep === 'review'"></div>
+      <div class="step" [class.active]="currentStep === 'review'">
+        <span class="step-number">2</span>
+        <span class="step-label">Review & Pay</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="checkout-main">
+    <!-- Loading State -->
+    <div class="loading-container" *ngIf="loading">
+      <app-loading-spinner message="Loading checkout..."></app-loading-spinner>
+    </div>
+
+    <!-- Empty Cart State -->
+    <div class="empty-container" *ngIf="!loading && cart && cart.items.length === 0">
+      <app-empty-state
+        icon="cart"
+        title="Your cart is empty"
+        message="Add some products to your cart before checking out."
+        actionLabel="Browse Products"
+        actionLink="/buyer/products">
+      </app-empty-state>
+    </div>
+
+    <!-- Step 1: Address Selection -->
+    <div class="checkout-content" *ngIf="!loading && currentStep === 'address' && cart && cart.items.length > 0">
+      <div class="checkout-form">
+        <h2>Select Shipping Address</h2>
+
+        <!-- Error Message -->
+        <div class="error-message" *ngIf="error">
+          <span class="error-icon">!</span>
+          {{ error }}
+        </div>
+
+        <!-- Address List -->
+        <div class="address-list" *ngIf="addresses.length > 0">
+          <div 
+            class="address-card" 
+            *ngFor="let address of addresses"
+            [class.selected]="selectedAddressId === address.id"
+            (click)="selectAddress(address.id)">
+            <div class="address-radio">
+              <span class="radio-dot" *ngIf="selectedAddressId === address.id"></span>
+            </div>
+            <div class="address-details">
+              <p class="address-street">{{ address.street }}</p>
+              <p class="address-city">{{ address.city }}, {{ address.state }} {{ address.zipCode }}</p>
+              <p class="address-country">{{ address.country }}</p>
+              <span class="default-badge" *ngIf="address.isDefault">Default</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- No Addresses Message -->
+        <div class="no-addresses" *ngIf="addresses.length === 0 && !showAddressForm">
+          <p>You don't have any shipping addresses saved.</p>
+          <p>Add a new address to continue.</p>
+        </div>
+
+        <!-- Add New Address Button -->
+        <button 
+          class="add-address-btn" 
+          (click)="toggleAddressForm()"
+          *ngIf="!showAddressForm">
+          <span class="plus-icon">+</span>
+          Add New Address
+        </button>
+
+        <!-- New Address Form -->
+        <div class="address-form" *ngIf="showAddressForm">
+          <h3>Add New Address</h3>
+          
+          <div class="form-error" *ngIf="addressFormError">
+            {{ addressFormError }}
+          </div>
+
+          <div class="form-group">
+            <label for="street">Street Address *</label>
+            <input 
+              type="text" 
+              id="street" 
+              [(ngModel)]="newAddress.street"
+              placeholder="123 Main Street">
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="city">City *</label>
+              <input 
+                type="text" 
+                id="city" 
+                [(ngModel)]="newAddress.city"
+                placeholder="New York">
+            </div>
+            <div class="form-group">
+              <label for="state">State *</label>
+              <input 
+                type="text" 
+                id="state" 
+                [(ngModel)]="newAddress.state"
+                placeholder="NY">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="zipCode">ZIP Code *</label>
+              <input 
+                type="text" 
+                id="zipCode" 
+                [(ngModel)]="newAddress.zip_code"
+                placeholder="10001">
+            </div>
+            <div class="form-group">
+              <label for="country">Country *</label>
+              <input 
+                type="text" 
+                id="country" 
+                [(ngModel)]="newAddress.country"
+                placeholder="United States">
+            </div>
+          </div>
+
+          <div class="form-group checkbox-group">
+            <label class="checkbox-label">
+              <input type="checkbox" [(ngModel)]="newAddress.is_default">
+              Set as default shipping address
+            </label>
+          </div>
+
+          <div class="form-actions">
+            <button 
+              class="cancel-btn" 
+              (click)="toggleAddressForm()"
+              [disabled]="submitting">
+              Cancel
+            </button>
+            <button 
+              class="save-btn" 
+              (click)="saveAddress()"
+              [disabled]="submitting">
+              {{ submitting ? 'Saving...' : 'Save Address' }}
+            </button>
+          </div>
+        </div>
+
+        <!-- Continue Button -->
+        <button 
+          class="continue-btn"
+          (click)="proceedToReview()"
+          [disabled]="!selectedAddressId"
+          *ngIf="!showAddressForm">
+          Continue to Review
+        </button>
+      </div>
+
+      <!-- Order Summary Sidebar -->
+      <aside class="order-summary">
+        <h2>Order Summary</h2>
+
+        <div class="summary-items">
+          <div class="summary-item" *ngFor="let sellerId of getSellerIds()">
+            <span class="seller-name">{{ cart!.totalBySeller[sellerId].sellerName }}</span>
+            <span class="item-count">({{ cart!.totalBySeller[sellerId].itemCount }} items)</span>
+            <span class="seller-subtotal">{{ formatPrice(cart!.totalBySeller[sellerId].subtotal) }}</span>
+          </div>
+        </div>
+
+        <div class="summary-divider"></div>
+
+        <div class="summary-row">
+          <span>Subtotal</span>
+          <span>{{ formatPrice(cart!.totalPrice) }}</span>
+        </div>
+
+        <div class="summary-row">
+          <span>Shipping</span>
+          <span *ngIf="getShippingCost() === 0" class="free-shipping">FREE</span>
+          <span *ngIf="getShippingCost() > 0">{{ formatPrice(getShippingCost()) }}</span>
+        </div>
+
+        <div class="summary-divider"></div>
+
+        <div class="summary-row total">
+          <span>Total</span>
+          <span>{{ formatPrice(getTotalWithShipping()) }}</span>
+        </div>
+
+        <p class="shipping-note" *ngIf="cart!.totalPrice < 100">
+          Add {{ formatPrice(100 - cart!.totalPrice) }} more for free shipping!
+        </p>
+      </aside>
+    </div>
+
+    <!-- Step 2: Review & Payment -->
+    <div class="checkout-content" *ngIf="!loading && currentStep === 'review' && cart">
+      <div class="checkout-form">
+        <h2>Review Your Order</h2>
+
+        <!-- Error Message -->
+        <div class="error-message" *ngIf="error">
+          <span class="error-icon">!</span>
+          {{ error }}
+        </div>
+
+        <!-- Shipping Address -->
+        <div class="review-section">
+          <div class="section-header">
+            <h3>Shipping Address</h3>
+            <button class="edit-btn" (click)="backToAddress()">Edit</button>
+          </div>
+          <div class="selected-address" *ngIf="getSelectedAddress() as address">
+            <p>{{ address.street }}</p>
+            <p>{{ address.city }}, {{ address.state }} {{ address.zipCode }}</p>
+            <p>{{ address.country }}</p>
+          </div>
+        </div>
+
+        <!-- Order Items -->
+        <div class="review-section">
+          <h3>Order Items</h3>
+          <div class="order-items">
+            <div class="item-group" *ngFor="let sellerId of getSellerIds()">
+              <div class="seller-label">{{ cart!.totalBySeller[sellerId].sellerName }}</div>
+              <div class="item-row" *ngFor="let item of getItemsBySeller(sellerId)">
+                <div class="item-info">
+                  <span class="item-name">{{ item.productName }}</span>
+                  <span class="item-variant">{{ item.weightGrams }}g - {{ item.sku }}</span>
+                </div>
+                <div class="item-quantity">Qty: {{ item.quantity }}</div>
+                <div class="item-price">{{ formatPrice(item.price * item.quantity) }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Payment Section -->
+        <div class="review-section">
+          <h3>Payment</h3>
+          <div class="payment-info">
+            <p class="payment-note">
+              Payment will be processed securely after order confirmation.
+            </p>
+            <p class="demo-note">
+              <strong>Demo Mode:</strong> No real payment will be charged.
+            </p>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="review-actions">
+          <button class="back-btn" (click)="backToAddress()" [disabled]="submitting">
+            Back
+          </button>
+          <button class="place-order-btn" (click)="placeOrder()" [disabled]="submitting">
+            {{ submitting ? 'Processing...' : 'Place Order' }}
+          </button>
+        </div>
+      </div>
+
+      <!-- Order Summary Sidebar -->
+      <aside class="order-summary">
+        <h2>Order Summary</h2>
+
+        <div class="summary-row">
+          <span>Items ({{ cart!.totalItems }})</span>
+          <span>{{ formatPrice(cart!.totalPrice) }}</span>
+        </div>
+
+        <div class="summary-row">
+          <span>Shipping</span>
+          <span *ngIf="getShippingCost() === 0" class="free-shipping">FREE</span>
+          <span *ngIf="getShippingCost() > 0">{{ formatPrice(getShippingCost()) }}</span>
+        </div>
+
+        <div class="summary-divider"></div>
+
+        <div class="summary-row total">
+          <span>Order Total</span>
+          <span>{{ formatPrice(getTotalWithShipping()) }}</span>
+        </div>
+      </aside>
+    </div>
+
+    <!-- Step 3: Order Confirmation -->
+    <div class="confirmation-content" *ngIf="currentStep === 'confirmation' && orderConfirmation">
+      <div class="confirmation-card">
+        <div class="success-icon">&#10003;</div>
+        <h2>Thank you for your order!</h2>
+        <p class="order-number">Order #{{ orderConfirmation.order.orderNumber }}</p>
+        
+        <div class="confirmation-details">
+          <p>We've received your order and will begin processing it shortly.</p>
+          <p>You will receive an email confirmation with tracking details.</p>
+        </div>
+
+        <div class="order-summary-brief">
+          <div class="summary-row">
+            <span>Total Paid</span>
+            <span class="total-amount">{{ formatPrice(orderConfirmation.order.totalAmount) }}</span>
+          </div>
+          <div class="summary-row">
+            <span>Items</span>
+            <span>{{ orderConfirmation.items.length }}</span>
+          </div>
+          <div class="summary-row">
+            <span>Shipping To</span>
+            <span>{{ orderConfirmation.shippingAddress.city }}, {{ orderConfirmation.shippingAddress.state }}</span>
+          </div>
+        </div>
+
+        <div class="confirmation-actions">
+          <button class="view-orders-btn" (click)="goToOrders()">View My Orders</button>
+          <button class="continue-btn" (click)="continueShopping()">Continue Shopping</button>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>

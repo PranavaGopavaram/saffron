@@ -4,6 +4,7 @@ import { authMiddleware, requireRole } from '../middleware/auth.middleware';
 import { validate } from '../middleware/validate.middleware';
 import {
   createProductValidator,
+  updateProductValidator,
   createVariantValidator,
   productSearchValidator,
 } from '../utils/marketplace-validators';
@@ -27,7 +28,7 @@ router.put(
   '/:id',
   authMiddleware,
   requireRole(['seller']),
-  createProductValidator,
+  updateProductValidator,
   validate,
   productController.updateProduct
 );

@@ -1,5 +1,3 @@
-// base service class
-
 import { pool } from '../config/database';
 import {
   getTransactionConnection,
@@ -125,6 +123,8 @@ export abstract class MarketplaceBaseService {
 
   protected roundPrice(price: number): number {
     return Math.round(price * 100) / 100;
+    //return Math.ceil(price * 100) / 100;
+
   }
 
   protected calculateOffset(page: number, limit: number): number {

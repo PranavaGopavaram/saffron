@@ -1,0 +1,61 @@
+@if (totalPages > 1) {
+  <div class="pagination-container">
+    <div class="pagination-info">
+      Showing {{ startItem }} - {{ endItem }} of {{ totalItems }} items
+    </div>
+    
+    <nav class="pagination" aria-label="Pagination">
+      <button 
+        class="page-btn nav-btn"
+        (click)="goToFirst()"
+        [disabled]="currentPage === 1"
+        aria-label="First page">
+        <svg viewBox="0 0 24 24"><path d="M18.41 16.59L13.82 12l4.59-4.59L17 6l-6 6 6 6 1.41-1.41zM6 6h2v12H6V6z"/></svg>
+      </button>
+      
+      <button 
+        class="page-btn nav-btn"
+        (click)="goToPrevious()"
+        [disabled]="currentPage === 1"
+        aria-label="Previous page">
+        <svg viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+      </button>
+      
+      @if (showFirstEllipsis) {
+        <button class="page-btn" (click)="goToPage(1)">1</button>
+        <span class="ellipsis">...</span>
+      }
+      
+      @for (page of visiblePages; track page) {
+        <button 
+          class="page-btn"
+          [class.active]="page === currentPage"
+          (click)="goToPage(page)"
+          [attr.aria-current]="page === currentPage ? 'page' : null">
+          {{ page }}
+        </button>
+      }
+      
+      @if (showLastEllipsis) {
+        <span class="ellipsis">...</span>
+        <button class="page-btn" (click)="goToPage(totalPages)">{{ totalPages }}</button>
+      }
+      
+      <button 
+        class="page-btn nav-btn"
+        (click)="goToNext()"
+        [disabled]="currentPage === totalPages"
+        aria-label="Next page">
+        <svg viewBox="0 0 24 24"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>
+      </button>
+      
+      <button 
+        class="page-btn nav-btn"
+        (click)="goToLast()"
+        [disabled]="currentPage === totalPages"
+        aria-label="Last page">
+        <svg viewBox="0 0 24 24"><path d="M5.59 7.41L10.18 12l-4.59 4.59L7 18l6-6-6-6-1.41 1.41zM16 6h2v12h-2V6z"/></svg>
+      </button>
+    </nav>
+  </div>
+}

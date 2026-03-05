@@ -1,0 +1,167 @@
+<div class="order-detail-container">
+  <!-- Header -->
+  <header class="order-header">
+    <div class="header-content">
+      <button class="back-btn" (click)="goBack()">
+        <span class="back-icon">&larr;</span>
+        Back to Orders
+      </button>
+      <h1 *ngIf="orderDetail">Order #{{ orderDetail.order.orderNumber }}</h1>
+    </div>
+  </header>
+
+  <main class="order-main">
+    <!-- Loading State -->
+    <div class="loading-container" *ngIf="loading">
+      <app-loading-spinner message="Loading order details..."></app-loading-spinner>
+    </div>
+
+    <!-- Error State -->
+    <div class="error-container" *ngIf="error && !loading">
+      <div class="error-card">
+        <span class="error-icon">!</span>
+        <p>{{ error }}</p>
+        <button class="retry-btn" (click)="loadOrder(orderDetail?.order?.id || 0)">Try Again</button>
+      </div>
+    </div>
+
+    <!-- Order Content -->
+    <div class="order-content" *ngIf="!loading && !error && orderDetail">
+      <!-- Order Status Banner -->
+      <div class="status-banner" [class]="getStatusClass(orderDetail.order.orderStatus)">
+        <div class="status-info">
+          <span class="status-label">Order Status</span>
+          <span class="status-value">{{ getStatusLabel(orderDetail.order.orderStatus) }}</span>
+        </div>
+        <div class="status-info">
+          <span class="status-label">Payment</span>
+          <span class="status-value" [class]="getPaymentStatusClass(orderDetail.order.paymentStatus.toString())">
+            {{ orderDetail.order.paymentStatus | titlecase }}
+          </span>
+        </div>
+        <div class="status-info">
+          <span class="status-label">Estimated Delivery</span>
+          <span class="status-value">{{ formatShortDate(orderDetail.order.deliveryDateEstimated) }}</span>
+        </div>
+      </div>
+
+      <!-- Main Content Grid -->
+      <div class="content-grid">
+        <div class="main-column">
+          <!-- Order Items -->
+          <section class="section items-section">
+            <h2>Order Items</h2>
+            
+            <div class="seller-group" *ngFor="let entry of getItemsBySeller() | keyvalue">
+              <div class="seller-header">
+                <span class="seller-name">{{ entry.value.sellerName }}</span>
+              </div>
+              
+              <div class="item-row" *ngFor="let item of entry.value.items">
+                <div class="item-image">
+                  <div class="image-placeholder">Saffron</div>
+                </div>
+                <div class="item-details">
+                  <h4 class="item-name">{{ item.productName }}</h4>
+                  <p class="item-meta">
+                    <span class="item-weight">{{ item.weightGrams }}g</span>
+                    <span class="item-sku">SKU: {{ item.sku }}</span>
+                  </p>
+                  <div class="item-status" [class]="getStatusClass(item.itemStatus)">
+                    {{ getStatusLabel(item.itemStatus) }}
+                  </div>
+                </div>
+                <div class="item-pricing">
+                  <span class="item-quantity">Qty: {{ item.quantity }}</span>
+                  <span class="item-unit-price">{{ formatPrice(item.unitPrice) }} each</span>
+                  <span class="item-subtotal">{{ formatPrice(item.subtotal) }}</span>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Shipping Address -->
+          <section class="section address-section">
+            <h2>Shipping Address</h2>
+            <div class="address-card">
+              <p class="buyer-name">{{ orderDetail.buyer.fullName }}</p>
+              <p>{{ orderDetail.shippingAddress.street }}</p>
+              <p>{{ orderDetail.shippingAddress.city }}, {{ orderDetail.shippingAddress.state }} {{ orderDetail.shippingAddress.zipCode }}</p>
+              <p>{{ orderDetail.shippingAddress.country }}</p>
+            </div>
+          </section>
+        </div>
+
+        <!-- Sidebar -->
+        <aside class="sidebar">
+          <!-- Order Summary -->
+          <div class="summary-card">
+            <h3>Order Summary</h3>
+            
+            <div class="summary-row">
+              <span>Subtotal</span>
+              <span>{{ formatPrice(getSubtotal()) }}</span>
+            </div>
+            
+            <div class="summary-row">
+              <span>Shipping</span>
+              <span *ngIf="orderDetail.order.shippingCost === 0" class="free-shipping">FREE</span>
+              <span *ngIf="orderDetail.order.shippingCost > 0">{{ formatPrice(orderDetail.order.shippingCost) }}</span>
+            </div>
+            
+            <div class="summary-divider"></div>
+            
+            <div class="summary-row total">
+              <span>Total</span>
+              <span>{{ formatPrice(orderDetail.order.totalAmount) }}</span>
+            </div>
+          </div>
+
+          <!-- Order Info -->
+          <div class="info-card">
+            <h3>Order Information</h3>
+            
+            <div class="info-row">
+              <span class="info-label">Order Number</span>
+              <span class="info-value">{{ orderDetail.order.orderNumber }}</span>
+            </div>
+            
+            <div class="info-row">
+              <span class="info-label">Order Date</span>
+              <span class="info-value">{{ formatDate(orderDetail.order.createdAt) }}</span>
+            </div>
+            
+            <div class="info-row" *ngIf="orderDetail.order.completedAt">
+              <span class="info-label">Completed</span>
+              <span class="info-value">{{ formatDate(orderDetail.order.completedAt) }}</span>
+            </div>
+            
+            <div class="info-row">
+              <span class="info-label">Items</span>
+              <span class="info-value">{{ orderDetail.items.length }}</span>
+            </div>
+          </div>
+
+          <!-- Actions -->
+          <div class="actions-card">
+            <button 
+              class="cancel-btn" 
+              *ngIf="canCancel()"
+              (click)="cancelOrder()"
+              [disabled]="cancelling">
+              {{ cancelling ? 'Cancelling...' : 'Cancel Order' }}
+            </button>
+            
+            <a routerLink="/buyer/products" class="continue-btn">
+              Continue Shopping
+            </a>
+            
+            <button class="support-btn">
+              Need Help?
+            </button>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </main>
+</div>

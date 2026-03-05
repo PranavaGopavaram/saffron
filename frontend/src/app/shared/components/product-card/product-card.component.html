@@ -1,0 +1,36 @@
+<a class="product-card" [routerLink]="['/buyer/products', product.product.id]">
+  <div class="product-image">
+    <img [src]="productImage" [alt]="product.product.productName" />
+    <span class="grade-badge" [ngClass]="gradeClass">{{ gradeLabel }}</span>
+  </div>
+  
+  <div class="product-info">
+    <h3 class="product-name">{{ product.product.productName }}</h3>
+    
+    <p class="product-origin">
+      <span class="origin-label">Origin:</span> {{ product.product.origin }}
+    </p>
+    
+    <div class="product-rating">
+      <app-star-rating [rating]="product.sellerInfo.averageRating" [readonly]="true" [size]="'small'"></app-star-rating>
+      <span class="seller-name">by {{ product.sellerInfo.businessName }}</span>
+    </div>
+    
+    <div class="product-attributes">
+      @if (product.product.isoCertification) {
+        <span class="attribute-badge iso">ISO Certified</span>
+      }
+      <span class="attribute-badge color">Color: {{ product.product.colorRating }}/10</span>
+      <span class="attribute-badge aroma">Aroma: {{ product.product.aromaScore }}/10</span>
+    </div>
+    
+    <div class="product-footer">
+      <span class="product-price">{{ priceRange }}</span>
+      @if (showAddToCart && product.variants.length > 0) {
+        <button class="add-to-cart-btn" (click)="onAddToCart($event)">
+          Add to Cart
+        </button>
+      }
+    </div>
+  </div>
+</a>
