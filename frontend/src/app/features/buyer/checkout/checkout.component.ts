@@ -12,7 +12,7 @@ import {
   OrderDetail,
   ApiResponse,
   CreateAddressRequest
-} from '../../landing/models/marketplace.model';
+} from '../../../core/models/marketplace.model';
 import { LoadingSpinnerComponent, EmptyStateComponent } from '../../../shared/components';
 
 type CheckoutStep = 'address' | 'review' | 'confirmation';

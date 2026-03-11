@@ -67,7 +67,7 @@ export class QuantityInputComponent implements ControlValueAccessor {
     this.onTouched();
   }
 
-  // ControlValueAccessor implementation
+
   writeValue(value: number): void {
     this._quantity = value || this.min;
   }

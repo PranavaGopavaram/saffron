@@ -1,0 +1,51 @@
+<app-buyer-header></app-buyer-header>
+
+<div class="home-container">
+  <section class="quick-actions">
+    <h2>Quick Actions</h2>
+    <div class="action-grid">
+      <a routerLink="/buyer/products" class="action-card primary">
+        <span class="action-icon">🌸</span>
+        <span class="action-text">Browse Saffron</span>
+      </a>
+      <a routerLink="/buyer/cart" class="action-card">
+        <span class="action-icon">🛒</span>
+        <span class="action-text">Cart</span>
+      </a>
+      <a routerLink="/buyer/dashboard" class="action-card">
+        <span class="action-icon">📊</span>
+        <span class="action-text">Dashboard</span>
+      </a>
+      <a routerLink="/buyer/addresses" class="action-card">
+        <span class="action-icon">📍</span>
+        <span class="action-text">Addresses</span>
+      </a>
+    </div>
+  </section>
+
+  <section class="shop-section">
+    <h2>Shop by Origin</h2>
+    <div class="origin-grid">
+      <a *ngFor="let origin of origins" 
+         [routerLink]="['/buyer/products']" 
+         [queryParams]="{origin: origin.id}" 
+         class="origin-card">
+        <span class="origin-flag">{{ origin.flag }}</span>
+        <span class="origin-name">{{ origin.name }}</span>
+      </a>
+    </div>
+  </section>
+
+  <section class="shop-section">
+    <h2>Shop by Grade</h2>
+    <div class="grade-grid">
+      <a *ngFor="let grade of grades"
+         [routerLink]="['/buyer/products']"
+         [queryParams]="{grade: grade.id}"
+         class="grade-card"
+         [ngClass]="grade.class">
+        {{ grade.name }}
+      </a>
+    </div>
+  </section>
+</div>

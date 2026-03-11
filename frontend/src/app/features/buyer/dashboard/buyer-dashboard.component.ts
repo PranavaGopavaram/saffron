@@ -1,58 +1,88 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, RouterLink, RouterLinkActive } from '@angular/router';
-import { AuthService } from '../../auth/services/auth.service';
-import { CartService } from '../../../core/services/cart.service';
+import { RouterModule } from '@angular/router';
+import { BuyerHeaderComponent } from '../shared/buyer-header/buyer-header.component';
 import { OrderService } from '../../../core/services/order.service';
-import { User } from '../../../core/models/user.model';
-import { OrderSummary } from '../../landing/models/marketplace.model';
+import { OrderSummary } from '../../../core/models/marketplace.model';
 
 interface OrderStats {
-  total: number; pending: number; shipped: number; delivered: number;
+  total: number;
+  pending: number;
+  confirmed: number;
+  shipped: number;
+  delivered: number;
+}
+
+interface SpendingSummary {
+  totalSpent: number;
+  thisMonth: number;
+  avgOrder: number;
 }
 
 @Component({
   selector: 'app-buyer-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterLink, RouterLinkActive],
+  imports: [CommonModule, RouterModule, BuyerHeaderComponent],
   templateUrl: './buyer-dashboard.component.html',
   styleUrls: ['./buyer-dashboard.component.css']
 })
 export class BuyerDashboardComponent implements OnInit {
-  private authService = inject(AuthService);
-  private cartService = inject(CartService);
   private orderService = inject(OrderService);
-  private router = inject(Router);
 
-  user = signal<User | null>(null);
-  cartItemCount = signal(0);
-  orderStats = signal<OrderStats>({ total: 0, pending: 0, shipped: 0, delivered: 0 });
+  orderStats = signal<OrderStats>({ total: 0, pending: 0, confirmed: 0, shipped: 0, delivered: 0 });
+  recentOrders = signal<OrderSummary[]>([]);
+  spending = signal<SpendingSummary>({ totalSpent: 0, thisMonth: 0, avgOrder: 0 });
+  loading = signal(true);
 
   ngOnInit(): void {
-    this.user.set(this.authService.getCurrentUser());
     this.loadDashboardData();
   }
 
   private loadDashboardData(): void {
-    this.cartService.getCart().subscribe(res => 
-      this.cartItemCount.set(res.success ? res.data?.items?.length || 0 : 0)
-    );
-
     this.orderService.getMyOrders().subscribe(res => {
       if (res.success && Array.isArray(res.data)) {
         const orders = res.data;
+        
         this.orderStats.set({
           total: orders.length,
-          pending: orders.filter(o => ['pending', 'confirmed'].includes(o.orderStatus)).length,
+          pending: orders.filter(o => o.orderStatus === 'pending').length,
+          confirmed: orders.filter(o => o.orderStatus === 'confirmed').length,
           shipped: orders.filter(o => o.orderStatus === 'shipped').length,
           delivered: orders.filter(o => o.orderStatus === 'delivered').length
         });
+
+        const sorted = [...orders].sort((a, b) => 
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
+        this.recentOrders.set(sorted.slice(0, 5));
+
+        const totalSpent = orders.reduce((sum, o) => sum + Number(o.totalAmount), 0);
+        const now = new Date();
+        const thisMonthOrders = orders.filter(o => {
+          const d = new Date(o.createdAt);
+          return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+        });
+        const thisMonth = thisMonthOrders.reduce((sum, o) => sum + Number(o.totalAmount), 0);
+
+        this.spending.set({
+          totalSpent,
+          thisMonth,
+          avgOrder: orders.length > 0 ? totalSpent / orders.length : 0
+        });
       }
+      this.loading.set(false);
     });
   }
 
-  onLogout(): void {
-    this.authService.logout();
-    this.router.navigate(['/auth/login']);
+  formatPrice(price: number): string {
+    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(price);
+  }
+
+  formatDate(date: string | Date): string {
+    return new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  }
+
+  getStatusClass(status: string): string {
+    return 'status-' + status;
   }
 }

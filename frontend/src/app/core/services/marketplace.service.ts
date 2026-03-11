@@ -12,7 +12,7 @@ import {
   CreateAddressRequest,
   UpdateAddressRequest,
   ApiResponse
-} from '../../features/landing/models/marketplace.model';
+} from '../models/marketplace.model';
 
 @Injectable({
   providedIn: 'root'

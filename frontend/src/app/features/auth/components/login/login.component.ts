@@ -52,9 +52,12 @@ export class LoginComponent {
           this.successMessage = 'Login successful! Redirecting...';
           const userRole = response.data.user.role;
           
-          // Navigate to appropriate dashboard
           setTimeout(() => {
-            this.router.navigate([`/${userRole}/dashboard`]);
+            if (userRole === 'buyer') {
+              this.router.navigate(['/buyer/home']);
+            } else {
+              this.router.navigate([`/${userRole}/dashboard`]);
+            }
           }, 500);
         } else {
           this.errorMessage = response.message || 'Login failed';

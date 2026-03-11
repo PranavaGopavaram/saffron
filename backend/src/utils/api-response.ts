@@ -80,13 +80,6 @@ export function internalErrorResponse(
   errorResponse(res, message, undefined, 500);
 }
 
-export function serviceUnavailableResponse(
-  res: Response,
-  message: string = 'Service unavailable'
-): void {
-  errorResponse(res, message, undefined, 503);
-}
-
 export class ValidationError extends Error {
   constructor(
     public errors: Array<{ field: string; message: string }>,

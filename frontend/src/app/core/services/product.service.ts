@@ -3,7 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { tap, catchError } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
-import { 
+import {
   Product,
   ProductVariant,
   ProductResponse,
@@ -11,7 +11,7 @@ import {
   CreateVariantRequest,
   ProductGrade,
   ApiResponse
-} from '../../features/landing/models/marketplace.model';
+} from '../models/marketplace.model';
 
 @Injectable({
   providedIn: 'root'
@@ -19,28 +19,32 @@ import {
 export class ProductService {
   private readonly apiUrl = `${environment.apiUrl}/products`;
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   getProducts(filters?: {
     grade?: ProductGrade;
     minPrice?: number;
     maxPrice?: number;
     origin?: string;
+    search?: string;
+    sort?: string;
     page?: number;
     limit?: number;
-  }): Observable<ApiResponse<ProductResponse[]>> {
+  }): Observable<ApiResponse<{ data: ProductResponse[]; total: number; page: number; limit: number }>> {
     let params = new HttpParams();
-    
+
     if (filters) {
       if (filters.grade) params = params.set('grade', filters.grade);
       if (filters.minPrice) params = params.set('min_price', filters.minPrice.toString());
       if (filters.maxPrice) params = params.set('max_price', filters.maxPrice.toString());
       if (filters.origin) params = params.set('origin', filters.origin);
+      if (filters.search) params = params.set('search', filters.search);
+      if (filters.sort) params = params.set('sort', filters.sort);
       if (filters.page) params = params.set('page', filters.page.toString());
       if (filters.limit) params = params.set('limit', filters.limit.toString());
     }
 
-    return this.http.get<ApiResponse<ProductResponse[]>>(
+    return this.http.get<ApiResponse<{ data: ProductResponse[]; total: number; page: number; limit: number }>>(
       this.apiUrl,
       { params }
     ).pipe(

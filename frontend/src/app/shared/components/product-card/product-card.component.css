@@ -153,6 +153,18 @@
   transition: background 0.2s;
 }
 
+.product-next-page-btn {
+  background: #667eea;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
 .add-to-cart-btn:hover {
   background: #5a6fd6;
 }

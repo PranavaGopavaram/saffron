@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, ActivatedRoute } from '@angular/router';
 import { OrderService } from '../../../../core/services/order.service';
-import { OrderSummary, ApiResponse, OrderStatus } from '../../../landing/models/marketplace.model';
+import { OrderSummary, ApiResponse, OrderStatus } from '../../../../core/models/marketplace.model';
 import { LoadingSpinnerComponent, EmptyStateComponent, PaginationComponent } from '../../../../shared/components';
 
 type OrderFilter = 'all' | 'pending' | 'shipped' | 'delivered' | 'cancelled';

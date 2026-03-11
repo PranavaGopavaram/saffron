@@ -6,9 +6,7 @@ import { config } from '../config/env';
 import { RegistrationData, LoginData, AuthResponse } from '../models/user.model';
 
 export class AuthService {
-  /**
-   * Register new user (buyer or seller)
-   */
+
   async register(
     data: RegistrationData,
     files?: Express.Multer.File[]
@@ -16,7 +14,7 @@ export class AuthService {
     const connection = await pool.getConnection();
     
     try {
-      // Start transaction
+    
       await connection.beginTransaction();
       
       // 1. Check if email already exists

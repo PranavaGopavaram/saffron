@@ -1,298 +1,127 @@
-<div class="product-detail-container">
-  @if (isLoading) {
-    <app-loading-spinner message="Loading product details..."></app-loading-spinner>
-  } @else if (error) {
-    <app-empty-state
-      icon="error"
-      title="Failed to load product"
-      [message]="error"
-      actionLabel="Go Back"
-      (action)="goBack()">
-    </app-empty-state>
-  } @else if (product) {
-    <!-- Breadcrumb -->
-    <nav class="breadcrumb">
-      <a routerLink="/buyer/products">Products</a>
-      <span class="separator">/</span>
-      <span class="current">{{ product.product.productName }}</span>
-    </nav>
+<div class="product-detail-container" *ngIf="!isLoading && !error && product">
+  <div class="breadcrumb">
+    <a routerLink="/buyer/products">Products</a>
+    <span class="separator">/</span>
+    <span>{{ product.product.productName }}</span>
+  </div>
 
-    <div class="product-content">
-      <!-- Image Gallery -->
-      <div class="product-gallery">
-        <div class="main-image">
-          <img [src]="productImages[activeImageIndex]" [alt]="product.product.productName" />
-          <span class="grade-badge" [ngClass]="gradeClass">{{ gradeLabel }}</span>
-        </div>
-        @if (productImages.length > 1) {
-          <div class="image-thumbnails">
-            @for (image of productImages; track $index) {
-              <button 
-                class="thumbnail"
-                [class.active]="activeImageIndex === $index"
-                (click)="setActiveImage($index)">
-                <img [src]="image" alt="Product thumbnail" />
-              </button>
-            }
-          </div>
-        }
+  <div class="product-main">
+    <div class="product-gallery">
+      <div class="main-image">
+        <img [src]="getProductImage()" [alt]="product.product.productName">
       </div>
+      <div class="thumbnail-list" *ngIf="product.product.images && product.product.images.length > 1">
+        <button 
+          *ngFor="let img of product.product.images" 
+          class="thumbnail"
+          [class.active]="img === (product.product.images && product.product.images[0])">
+          <img [src]="img" [alt]="product.product.productName">
+        </button>
+      </div>
+    </div>
 
-      <!-- Product Info -->
-      <div class="product-info">
+    <div class="product-info">
+      <div class="product-header">
+        <h1>{{ product.product.productName }}</h1>
         <div class="seller-info">
           <span class="seller-label">Sold by</span>
           <span class="seller-name">{{ product.sellerInfo.businessName }}</span>
-          <app-star-rating 
-            [rating]="product.sellerInfo.averageRating" 
-            [readonly]="true" 
-            [size]="'small'"
-            [showValue]="true">
-          </app-star-rating>
+          <app-star-rating [rating]="product.sellerInfo.averageRating" [readonly]="true"></app-star-rating>
         </div>
-
-        <h1 class="product-title">{{ product.product.productName }}</h1>
-        
-        <div class="product-origin">
-          <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
-          Origin: {{ product.product.origin }}
-        </div>
-
-        <!-- Quality Attributes -->
-        <div class="quality-attributes">
-          <div class="attribute">
-            <span class="attribute-label">Color Rating</span>
-            <div class="attribute-bar">
-              <div class="attribute-fill" [style.width.%]="product.product.colorRating * 10"></div>
-            </div>
-            <span class="attribute-value">{{ product.product.colorRating }}/10</span>
-          </div>
-          <div class="attribute">
-            <span class="attribute-label">Aroma Score</span>
-            <div class="attribute-bar">
-              <div class="attribute-fill aroma" [style.width.%]="product.product.aromaScore * 10"></div>
-            </div>
-            <span class="attribute-value">{{ product.product.aromaScore }}/10</span>
-          </div>
-          <div class="attribute">
-            <span class="attribute-label">Moisture Level</span>
-            <div class="attribute-bar">
-              <div class="attribute-fill moisture" [style.width.%]="product.product.moistureLevel * 10"></div>
-            </div>
-            <span class="attribute-value">{{ product.product.moistureLevel }}%</span>
-          </div>
-        </div>
-
-        @if (product.product.isoCertification) {
-          <div class="certification-badge">
-            <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
-            ISO Certified
-          </div>
-        }
-
-        <!-- Variant Selection -->
-        @if (product.variants.length > 0) {
-          <div class="variant-section">
-            <h3>Select Package</h3>
-            <div class="variant-options">
-              @for (variant of product.variants; track variant.id) {
-                <button 
-                  class="variant-btn"
-                  [class.selected]="selectedVariant?.id === variant.id"
-                  [class.out-of-stock]="variant.stockQuantity === 0"
-                  (click)="selectVariant(variant)"
-                  [disabled]="variant.stockQuantity === 0">
-                  <span class="variant-weight">{{ formatWeight(variant.weightGrams) }}</span>
-                  <span class="variant-price">${{ variant.price.toFixed(2) }}</span>
-                  @if (variant.stockQuantity === 0) {
-                    <span class="variant-stock out">Out of Stock</span>
-                  } @else if (variant.stockQuantity < 10) {
-                    <span class="variant-stock low">Only {{ variant.stockQuantity }} left</span>
-                  }
-                </button>
-              }
-            </div>
-          </div>
-
-          <!-- Price & Add to Cart -->
-          @if (selectedVariant) {
-            <div class="purchase-section">
-              <div class="price-display">
-                <span class="current-price">${{ selectedVariant.price.toFixed(2) }}</span>
-                <span class="price-per">per {{ formatWeight(selectedVariant.weightGrams) }}</span>
-              </div>
-
-              <div class="quantity-section">
-                <label>Quantity:</label>
-                <app-quantity-input
-                  [min]="1"
-                  [max]="maxQuantity"
-                  [(ngModel)]="quantity"
-                  (quantityChange)="onQuantityChange($event)">
-                </app-quantity-input>
-                @if (selectedVariant.stockQuantity > 0) {
-                  <span class="stock-info">{{ selectedVariant.stockQuantity }} available</span>
-                }
-              </div>
-
-              <div class="action-buttons">
-                <button 
-                  class="btn-add-cart"
-                  [class.success]="addToCartSuccess"
-                  [disabled]="isOutOfStock || isAddingToCart"
-                  (click)="addToCart()">
-                  @if (isAddingToCart) {
-                    <span class="btn-spinner"></span>
-                    Adding...
-                  } @else if (addToCartSuccess) {
-                    <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
-                    Added to Cart!
-                  } @else {
-                    <svg viewBox="0 0 24 24"><path d="M11 9h2V6h3V4h-3V1h-2v3H8v2h3v3zm-4 9c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zm10 0c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2zm-9.83-3.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.86-7.01L19.42 4h-.01l-1.1 2-2.76 5H8.53l-.13-.27L6.16 6l-.95-2-.94-2H1v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.13 0-.25-.11-.25-.25z"/></svg>
-                    Add to Cart
-                  }
-                </button>
-                <button 
-                  class="btn-buy-now"
-                  [disabled]="isOutOfStock"
-                  (click)="buyNow()">
-                  Buy Now
-                </button>
-              </div>
-            </div>
-          }
-        } @else {
-          <div class="no-variants">
-            <p>This product is currently unavailable.</p>
-          </div>
-        }
       </div>
-    </div>
 
-    <!-- Tabs Section -->
-    <div class="tabs-section">
-      <div class="tabs-header">
-        <button 
-          class="tab-btn"
-          [class.active]="activeTab === 'description'"
-          (click)="setActiveTab('description')">
-          Description
-        </button>
-        <button 
-          class="tab-btn"
-          [class.active]="activeTab === 'reviews'"
-          (click)="setActiveTab('reviews')">
-          Reviews
-          @if (reviewSummary) {
-            <span class="review-count">({{ reviewSummary.totalReviews }})</span>
-          }
+      <div class="product-meta">
+        <div class="meta-item">
+          <span class="meta-label">Origin</span>
+          <span class="meta-value">{{ product.product.origin }}</span>
+        </div>
+        <div class="meta-item">
+          <span class="meta-label">Grade</span>
+          <span class="meta-value grade-badge" [attr.data-grade]="product.product.grade">{{ gradeLabel }}</span>
+        </div>
+        <div class="meta-item" *ngIf="product.product.isoCertification">
+          <span class="meta-value cert-badge">ISO Certified</span>
+        </div>
+      </div>
+
+      <div class="product-description">
+        <h3>Description</h3>
+        <p>{{ product.product.description }}</p>
+      </div>
+
+      <div class="product-specs">
+        <div class="spec-item">
+          <span class="spec-label">Color Rating</span>
+          <span class="spec-value">{{ product.product.colorRating }}/10</span>
+        </div>
+        <div class="spec-item">
+          <span class="spec-label">Aroma Score</span>
+          <span class="spec-value">{{ product.product.aromaScore }}/10</span>
+        </div>
+        <div class="spec-item" *ngIf="product.product.moistureLevel">
+          <span class="spec-label">Moisture Level</span>
+          <span class="spec-value">{{ product.product.moistureLevel }}%</span>
+        </div>
+      </div>
+
+      <div class="product-pricing">
+        <div class="price">{{ priceRange }}</div>
+      </div>
+
+      <div class="variant-selection">
+        <h4>Select Size</h4>
+        <div class="variant-options">
+          <button 
+            *ngFor="let variant of product.variants" 
+            class="variant-btn"
+            [class.selected]="variant.id === selectedVariantId"
+            [class.out-of-stock]="variant.stockQuantity === 0"
+            [disabled]="variant.stockQuantity === 0"
+            (click)="selectVariant(variant.id)">
+            <span class="variant-weight">{{ variant.weightGrams }}g</span>
+            <span class="variant-price">₹{{ variant.price.toLocaleString('en-IN') }}</span>
+            <span class="variant-stock" *ngIf="variant.stockQuantity < 10 && variant.stockQuantity > 0">
+              Only {{ variant.stockQuantity }} left
+            </span>
+            <span class="variant-stock out" *ngIf="variant.stockQuantity === 0">Out of stock</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="quantity-section">
+        <label>Quantity</label>
+          <app-quantity-input 
+          [quantity]="quantity" 
+          [min]="1" 
+          [max]="selectedVariant?.stockQuantity || 99"
+          (quantityChange)="onQuantityChange($event)">
+        </app-quantity-input>
+      </div>
+
+      <div class="action-buttons">
+        <button class="add-to-cart-btn" (click)="addToCart()" [disabled]="!selectedVariant">
+          Add to Cart - ₹{{ (selectedVariant?.price || 0) * quantity | number:'1.0-0' }}
         </button>
       </div>
-
-      <div class="tab-content">
-        @if (activeTab === 'description') {
-          <div class="description-content">
-            <p>{{ product.product.description }}</p>
-            
-            <div class="specs-table">
-              <h4>Product Specifications</h4>
-              <table>
-                <tr>
-                  <td>Grade</td>
-                  <td>{{ gradeLabel }}</td>
-                </tr>
-                <tr>
-                  <td>Origin</td>
-                  <td>{{ product.product.origin }}</td>
-                </tr>
-                <tr>
-                  <td>Color Rating</td>
-                  <td>{{ product.product.colorRating }}/10</td>
-                </tr>
-                <tr>
-                  <td>Aroma Score</td>
-                  <td>{{ product.product.aromaScore }}/10</td>
-                </tr>
-                <tr>
-                  <td>Moisture Level</td>
-                  <td>{{ product.product.moistureLevel }}%</td>
-                </tr>
-                <tr>
-                  <td>ISO Certified</td>
-                  <td>{{ product.product.isoCertification ? 'Yes' : 'No' }}</td>
-                </tr>
-              </table>
-            </div>
-          </div>
-        } @else {
-          <div class="reviews-content">
-            @if (reviewSummary && reviewSummary.totalReviews > 0) {
-              <div class="review-summary">
-                <div class="average-rating">
-                  <span class="rating-number">{{ reviewSummary.averageRating.toFixed(1) }}</span>
-                  <app-star-rating 
-                    [rating]="reviewSummary.averageRating" 
-                    [readonly]="true"
-                    [size]="'large'">
-                  </app-star-rating>
-                  <span class="total-reviews">{{ reviewSummary.totalReviews }} reviews</span>
-                </div>
-                
-                <div class="rating-breakdown">
-                  @for (star of [5, 4, 3, 2, 1]; track star) {
-                    <div class="rating-bar">
-                      <span class="star-label">{{ star }} star</span>
-                      <div class="bar-track">
-                        <div 
-                          class="bar-fill" 
-                          [style.width.%]="(reviewSummary.ratingBreakdown[star] / reviewSummary.totalReviews) * 100">
-                        </div>
-                      </div>
-                      <span class="bar-count">{{ reviewSummary.ratingBreakdown[star] }}</span>
-                    </div>
-                  }
-                </div>
-              </div>
-              
-              <div class="reviews-list">
-                @for (review of reviews; track review.id) {
-                  <div class="review-card">
-                    <div class="review-header">
-                      <span class="reviewer-name">{{ review.buyerName }}</span>
-                      <app-star-rating 
-                        [rating]="review.rating" 
-                        [readonly]="true"
-                        [size]="'small'">
-                      </app-star-rating>
-                    </div>
-                    @if (review.title) {
-                      <h4 class="review-title">{{ review.title }}</h4>
-                    }
-                    @if (review.comment) {
-                      <p class="review-comment">{{ review.comment }}</p>
-                    }
-                    <div class="review-footer">
-                      <span class="review-date">{{ review.createdAt | date:'mediumDate' }}</span>
-                      @if (review.authenticityVerified) {
-                        <span class="verified-badge">Verified Purchase</span>
-                      }
-                      @if (review.wouldRecommend) {
-                        <span class="recommend-badge">Would Recommend</span>
-                      }
-                    </div>
-                  </div>
-                }
-              </div>
-            } @else {
-              <app-empty-state
-                icon="products"
-                title="No reviews yet"
-                message="Be the first to review this product after your purchase.">
-              </app-empty-state>
-            }
-          </div>
-        }
-      </div>
     </div>
-  }
+  </div>
+</div>
+
+<div class="loading-wrapper" *ngIf="isLoading">
+  <div class="spinner"></div>
+  <p>Loading product...</p>
+</div>
+
+<div class="error-wrapper" *ngIf="error">
+  <div class="error-content">
+    <h2>{{ error }}</h2>
+    <button class="back-btn" (click)="goBack()">Back to Products</button>
+  </div>
+</div>
+
+<div class="product-detail-container" *ngIf="!isLoading && !error && !product">
+  <div class="error-content">
+    <h2>Product not found</h2>
+    <button class="back-btn" (click)="goBack()">Back to Products</button>
+  </div>
 </div>

@@ -23,26 +23,15 @@ interface ProductFilters {
   origin?: string;
   min_price?: number;
   max_price?: number;
+  search?: string;
+  sort?: string;
 }
 
 class ProductService extends MarketplaceBaseService {
-  private async getSellerIdFromUserId(userId: number): Promise<number> {
-    const [rows] = await pool.query(
-      'SELECT id FROM sellers WHERE user_id = ?',
-      [userId]
-    );
-    const seller = (rows as any[])[0];
-    if (!seller) {
-      throw new NotFoundError('Seller profile not found for this user');
-    }
-    return seller.id;
-  }
-
   async createProduct(
     userId: number,
     data: CreateProductRequest
-  ): Promise<SaffronProduct> 
-    {
+  ): Promise<SaffronProduct> {
     const sellerId = await this.getSellerIdFromUserId(userId);
 
     const product = await this.withTransaction(async (connection) => {
@@ -65,7 +54,7 @@ class ProductService extends MarketplaceBaseService {
 
       const insertId = (result as any).insertId;
 
-  
+
       const [rows] = await connection.query(
         'SELECT * FROM saffron_products WHERE id = ?',
         [insertId]
@@ -133,7 +122,11 @@ class ProductService extends MarketplaceBaseService {
     const conditions: string[] = ['sp.status = ?'];
     const params: any[] = ['active'];
 
-    // Apply filters
+    if (filters.search) {
+      conditions.push('(sp.product_name LIKE ? OR sp.description LIKE ?)');
+      params.push(`%${filters.search}%`, `%${filters.search}%`);
+    }
+
     if (filters.grade) {
       conditions.push('sp.grade = ?');
       params.push(filters.grade);
@@ -156,24 +149,106 @@ class ProductService extends MarketplaceBaseService {
 
     const whereClause = conditions.join(' AND ');
 
+    let orderBy = 'sp.created_at DESC';
+    if (filters.sort) {
+      switch (filters.sort) {
+        case 'price_asc':
+          orderBy = 'min_price ASC';
+          break;
+        case 'price_desc':
+          orderBy = 'min_price DESC';
+          break;
+        case 'best_sellers':
+          orderBy = 'order_count DESC, sp.created_at DESC';
+          break;
+        case 'newest':
+          orderBy = 'sp.created_at DESC';
+          break;
+      }
+    }
+
     const query = `SELECT sp.*, 
         s.business_name AS seller_name,
+        s.id AS s_id,
         MIN(pv.price) AS min_price,
         MAX(pv.price) AS max_price,
         SUM(pv.stock_quantity) AS total_stock,
         ROUND(AVG(r.rating), 1) AS average_rating,
-        COUNT(DISTINCT r.id) AS review_count
+        COUNT(DISTINCT r.id) AS review_count,
+        COUNT(DISTINCT oi.id) AS order_count
       FROM saffron_products sp
       JOIN sellers s ON sp.seller_id = s.id
       LEFT JOIN product_variants pv ON sp.id = pv.product_id
       LEFT JOIN reviews r ON sp.id = r.product_id
+      LEFT JOIN order_items oi ON pv.id = oi.variant_id
       WHERE ${whereClause}
       GROUP BY sp.id
-      ORDER BY sp.created_at DESC`;
+      ORDER BY ${orderBy}`;
 
-    return this.getPaginatedResults(query, params, validPage, validLimit);
+    const paginatedResult = await this.getPaginatedResults(query, params, validPage, validLimit);
+
+    if (paginatedResult.data.length === 0) {
+      return paginatedResult;
+    }
+
+    const productIds = paginatedResult.data.map((row: any) => row.id);
+    const [variantRows] = await pool.query(
+      `SELECT * FROM product_variants WHERE product_id IN (${productIds.map(() => '?').join(',')})`,
+      productIds
+    );
+    const variantsByProductId: Record<number, any[]> = {};
+    for (const v of variantRows as any[]) {
+      if (!variantsByProductId[v.product_id]) {
+        variantsByProductId[v.product_id] = [];
+      }
+      variantsByProductId[v.product_id].push({
+        id: v.id,
+        productId: v.product_id,
+        sku: v.sku,
+        weightGrams: v.weight_grams,
+        price: parseFloat(v.price),
+        packageType: v.package_type,
+        stockQuantity: v.stock_quantity,
+        createdAt: v.created_at,
+        updatedAt: v.updated_at,
+      });
+    }
+
+    paginatedResult.data = paginatedResult.data.map((row: any) => {
+      let images = row.images;
+      if (images && typeof images === 'string') {
+        try { images = JSON.parse(images); } catch { images = []; }
+      }
+
+      return {
+        product: {
+          id: row.id,
+          sellerId: row.seller_id,
+          productName: row.product_name,
+          description: row.description,
+          origin: row.origin,
+          grade: row.grade,
+          colorRating: row.color_rating,
+          aromaScore: row.aroma_score,
+          isoCertification: !!row.iso_certification,
+          moistureLevel: row.moisture_level ? parseFloat(row.moisture_level) : null,
+          images: images || [],
+          status: row.status,
+          createdAt: row.created_at,
+          updatedAt: row.updated_at,
+        },
+        variants: variantsByProductId[row.id] || [],
+        sellerInfo: {
+          id: row.s_id || row.seller_id,
+          businessName: row.seller_name || 'Unknown',
+          averageRating: row.average_rating ? parseFloat(row.average_rating) : 0,
+        },
+      };
+    });
+
+    return paginatedResult;
   }
-//product update 
+  //product update 
   async updateProduct(
     productId: number,
     userId: number,

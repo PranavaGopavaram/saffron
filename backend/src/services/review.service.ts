@@ -17,18 +17,6 @@ import {
 } from '../utils/api-response';
 
 class ReviewService extends MarketplaceBaseService {
-
-  private async getBuyerIdFromUserId(userId: number): Promise<number> {
-    const [rows] = await pool.query(
-      'SELECT id FROM buyers WHERE user_id = ?',
-      [userId]
-    );
-    const buyer = (rows as any[])[0];
-    if (!buyer) {
-      throw new NotFoundError('Buyer profile not found for this user');
-    }
-    return buyer.id;
-  }
   async createProductReview(
     userId: number,
     productId: number,

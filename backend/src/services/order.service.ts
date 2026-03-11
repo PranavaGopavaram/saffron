@@ -13,34 +13,8 @@ import {
   NotFoundError,
   ForbiddenError,
 } from '../utils/api-response';
-class OrderService extends MarketplaceBaseService {
- 
-    
-  private async getBuyerIdFromUserId(userId: number): Promise<number> {
-    const [rows] = await pool.query(
-      'SELECT id FROM buyers WHERE user_id = ?',
-      [userId]
-    );
-    const buyer = (rows as any[])[0];
-    if (!buyer) {
-      throw new NotFoundError('Buyer profile not found for this user');
-    }
-    return buyer.id;
-  }
 
-  
-  private async getSellerIdFromUserId(userId: number): Promise<number> {
-    const [rows] = await pool.query(
-      'SELECT id FROM sellers WHERE user_id = ?',
-      [userId]
-    );
-    const seller = (rows as any[])[0];
-    if (!seller) {
-      throw new NotFoundError('Seller profile not found for this user');
-    }
-    return seller.id;
-  }
- 
+class OrderService extends MarketplaceBaseService {
   
   private generateOrderNumber(): string {
     const timestamp = Date.now().toString(36).toUpperCase();

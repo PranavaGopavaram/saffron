@@ -1,5 +1,4 @@
-// Re-export ApiResponse from auth model for convenience
-export type { ApiResponse, ApiError } from '../../../core/models/auth.model';
+export type { ApiResponse, ApiError } from './auth.model';
 
 export enum ProductGrade {
   PREMIUM = 'premium',

@@ -1,7 +1,7 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { ProductResponse, ProductGrade } from '../../../features/landing/models/marketplace.model';
+import { ProductResponse, ProductGrade } from '../../../core/models/marketplace.model';
 import { StarRatingComponent } from '../star-rating/star-rating.component';
 
 @Component({
@@ -32,9 +32,9 @@ export class ProductCardComponent {
 
   get priceRange(): string {
     if (this.lowestPrice === this.highestPrice) {
-      return `$${this.lowestPrice.toFixed(2)}`;
+      return `₹${this.lowestPrice.toLocaleString('en-IN')}`;
     }
-    return `$${this.lowestPrice.toFixed(2)} - $${this.highestPrice.toFixed(2)}`;
+    return `₹${this.lowestPrice.toLocaleString('en-IN')} - ₹${this.highestPrice.toLocaleString('en-IN')}`;
   }
 
   get gradeLabel(): string {

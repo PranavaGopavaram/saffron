@@ -18,6 +18,11 @@ export const routes: Routes = [
     data: { roles: ['buyer', 'admin'] },
     children: [
       {
+        path: 'home',
+        loadComponent: () => import('./features/buyer/home/buyer-home.component')
+          .then(m => m.BuyerHomeComponent)
+      },
+      {
         path: 'dashboard',
         loadComponent: () => import('./features/buyer/dashboard/buyer-dashboard.component')
           .then(m => m.BuyerDashboardComponent)
@@ -59,7 +64,7 @@ export const routes: Routes = [
       },
       {
         path: '',
-        redirectTo: 'dashboard',
+        redirectTo: 'home',
         pathMatch: 'full'
       }
     ]

@@ -311,6 +311,7 @@ CREATE INDEX idx_sellers_verification ON sellers(verification_status, created_at
 CREATE INDEX idx_addresses_user_default ON addresses(user_id, is_default);
 CREATE INDEX idx_orders_buyer_status ON orders(buyer_id, order_status);
 CREATE INDEX idx_order_items_order_seller ON order_items(order_id, seller_id);
+CREATE INDEX idx_order_items_variant ON order_items(variant_id);
 CREATE INDEX idx_shopping_carts_buyer ON shopping_carts(buyer_id);
 CREATE INDEX idx_product_variants_stock ON product_variants(product_id, stock_quantity);
 CREATE INDEX idx_reviews_product_rating ON reviews(product_id, rating);

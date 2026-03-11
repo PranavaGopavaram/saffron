@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, ActivatedRoute, Router } from '@angular/router';
 import { OrderService } from '../../../../core/services/order.service';
-import { OrderDetail, OrderItemDetail, OrderStatus, ApiResponse } from '../../../landing/models/marketplace.model';
+import { OrderDetail, OrderItemDetail, OrderStatus, ApiResponse } from '../../../../core/models/marketplace.model';
 import { LoadingSpinnerComponent } from '../../../../shared/components';
 
 @Component({

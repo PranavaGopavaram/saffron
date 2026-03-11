@@ -3,41 +3,43 @@ import {
   getTransactionConnection,
   commitTransaction,
   rollbackTransaction,
-  executeInTransaction,
 } from '../utils/database-helpers';
+import { NotFoundError } from '../utils/api-response';
+
 
 export abstract class MarketplaceBaseService {
  
+  protected async getBuyerIdFromUserId(userId: number): Promise<number> {
+    const [rows] = await pool.query(
+      'SELECT id FROM buyers WHERE user_id = ?',
+      [userId]
+    );
+    const buyer = (rows as any[])[0];
+    if (!buyer) {
+      throw new NotFoundError('Buyer profile not found for this user');
+    }
+    return buyer.id;
+  }
+
+
+  protected async getSellerIdFromUserId(userId: number): Promise<number> {
+    const [rows] = await pool.query(
+      'SELECT id FROM sellers WHERE user_id = ?',
+      [userId]
+    );
+    const seller = (rows as any[])[0];
+    if (!seller) {
+      throw new NotFoundError('Seller profile not found for this user');
+    }
+    return seller.id;
+  }
+
+
   protected async isOwner(
     userId: number,
     resourceOwnerId: number
   ): Promise<boolean> {
     return userId === resourceOwnerId;
-  }
-
-  protected async hasRole(userId: number, role: string): Promise<boolean> {
-    const connection = await pool.getConnection();
-    const [rows] = await connection.query(
-      'SELECT role FROM users WHERE id = ?',
-      [userId]
-    );
-    connection.release();
-
-    const user = (rows as any[])[0];
-    return user && user.role === role;
-  }
-
-
-  protected async isSellerVerified(userId: number): Promise<boolean> {
-    const connection = await pool.getConnection();
-    const [rows] = await connection.query(
-      'SELECT verification_status FROM sellers WHERE user_id = ?',
-      [userId]
-    );
-    connection.release();
-
-    const seller = (rows as any[])[0];
-    return seller && seller.verification_status === 'verified';
   }
 
   protected async getPaginatedResults(
@@ -71,6 +73,8 @@ export abstract class MarketplaceBaseService {
       connection.release();
     }
   }
+
+
   protected async checkStockAvailability(
     variantId: number,
     quantity: number
@@ -85,6 +89,7 @@ export abstract class MarketplaceBaseService {
     const variant = (rows as any[])[0];
     return variant && variant.stock_quantity >= quantity;
   }
+
   protected async getAvailableStock(variantId: number): Promise<number> {
     const connection = await pool.getConnection();
     const [rows] = await connection.query(
@@ -96,6 +101,8 @@ export abstract class MarketplaceBaseService {
     const variant = (rows as any[])[0];
     return variant ? variant.stock_quantity : 0;
   }
+
+
   protected async withTransaction<T>(
     callback: (connection: any) => Promise<T>
   ): Promise<T> {
@@ -110,28 +117,12 @@ export abstract class MarketplaceBaseService {
     }
   }
 
-  protected formatTimestamp(date: Date | null | undefined): string | null {
-    if (!date) return null;
-    return new Date(date).toISOString();
-  }
-
-
-  protected getCurrentTimestamp(): string {
-    return new Date().toISOString();
-  }
-
-
+ 
   protected roundPrice(price: number): number {
     return Math.round(price * 100) / 100;
-    //return Math.ceil(price * 100) / 100;
-
   }
 
-  protected calculateOffset(page: number, limit: number): number {
-    return (page - 1) * limit;
-  }
-
-
+ 
   protected validatePagination(
     page: number,
     limit: number
@@ -139,13 +130,5 @@ export abstract class MarketplaceBaseService {
     const validPage = Math.max(1, page || 1);
     const validLimit = Math.min(100, Math.max(1, limit || 20));
     return { page: validPage, limit: validLimit };
-  }
-
-
-  protected formatError(error: any): string {
-    if (error instanceof Error) {
-      return error.message;
-    }
-    return String(error);
   }
 }

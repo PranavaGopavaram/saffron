@@ -35,6 +35,8 @@ export const productController = {
       max_price: req.query.max_price
         ? parseFloat(req.query.max_price as string)
         : undefined,
+      search: req.query.search as string | undefined,
+      sort: req.query.sort as string | undefined,
     };
 
     const result = await productService.listProducts(filters, page, limit);

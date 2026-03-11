@@ -18,9 +18,9 @@ export interface User {
 }
 
 /**
- * Address structure
+ * Address structure for registration forms (input only)
  */
-export interface Address {
+export interface AddressInput {
   street: string;
   city: string;
   state: string;
@@ -60,7 +60,7 @@ export interface BuyerRegistrationRequest {
   phone: string;
   role: 'buyer';
   companyName?: string;
-  shippingAddress: Address;
+  shippingAddress: AddressInput;
 }
 
 /**
@@ -74,7 +74,7 @@ export interface SellerRegistrationRequest {
   phone: string;
   role: 'seller';
   businessName: string;
-  businessAddress: Address;
+  businessAddress: AddressInput;
   taxId: string;
   saffronSource: string;
 }

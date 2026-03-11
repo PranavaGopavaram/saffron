@@ -6,7 +6,7 @@ import {
   CartSummary, 
   CartItemWithDetails,
   ApiResponse 
-} from '../../landing/models/marketplace.model';
+} from '../../../core/models/marketplace.model';
 import { LoadingSpinnerComponent, QuantityInputComponent, EmptyStateComponent } from '../../../shared/components';
 
 @Component({

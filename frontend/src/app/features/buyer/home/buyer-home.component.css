@@ -1,0 +1,142 @@
+.home-container {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+h2 {
+  margin-bottom: 1rem;
+  color: #333;
+}
+
+.quick-actions {
+  margin-bottom: 2rem;
+}
+
+.action-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+}
+
+.action-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1.5rem;
+  background: #fff;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  text-decoration: none;
+  color: #333;
+}
+
+.action-card:hover {
+  border-color: #8b5a2b;
+}
+
+.action-card.primary {
+  background: #8b5a2b;
+  color: #fff;
+}
+
+.action-icon {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+.action-text {
+  font-weight: 500;
+}
+
+.shop-section {
+  margin-bottom: 2rem;
+}
+
+.origin-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+}
+
+.origin-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1.5rem;
+  background: #fff;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  text-decoration: none;
+  color: #333;
+}
+
+.origin-card:hover {
+  border-color: #8b5a2b;
+}
+
+.origin-flag {
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.origin-name {
+  font-weight: 500;
+}
+
+.grade-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+}
+
+.grade-card {
+  padding: 1.5rem;
+  text-align: center;
+  border-radius: 8px;
+  text-decoration: none;
+  color: #fff;
+  font-weight: 600;
+}
+
+.grade-card.premium {
+  background: linear-gradient(135deg, #7b0d1e 0%, #a91d31 100%);
+  border: 1px solid #ffd700; 
+  color: #ffffff;
+  position: relative;
+  overflow: hidden;
+}
+
+.grade-card.premium::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -150%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(
+    to right,
+    transparent 0%,
+    rgba(255, 255, 255, 0.2) 50%,
+    transparent 100%
+  );
+  transform: skewX(-25deg);
+  animation: shimmer 4s infinite;
+}
+
+.grade-card.first {
+  background: linear-gradient(135deg, #c0392b 0%, #e67e22 100%);
+  color: #ffffff;
+}
+
+
+.grade-card.second {
+  background: linear-gradient(135deg, #f1c40f 0%, #ffcc33 100%);
+}
+
+
+@keyframes shimmer {
+  0% { left: -150%; }
+  20% { left: 150%; } 
+  100% { left: 150%; } 
+}

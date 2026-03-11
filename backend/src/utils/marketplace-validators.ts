@@ -1,4 +1,4 @@
-import { body, param, query, validationResult } from 'express-validator';
+import { body, param, query } from 'express-validator';
 
 export const createProductValidator = [
   body('product_name')
@@ -267,6 +267,17 @@ export const reviewIdValidator = [
 
 
 export const productSearchValidator = [
+  query('search')
+    .optional()
+    .trim()
+    .isLength({ max: 100 })
+    .withMessage('Search term cannot exceed 100 characters'),
+
+  query('sort')
+    .optional()
+    .isIn(['price_asc', 'price_desc', 'best_sellers', 'newest'])
+    .withMessage('Invalid sort parameter'),
+
   query('grade')
     .optional()
     .isIn(['premium', 'first', 'second', 'third'])
@@ -297,14 +308,6 @@ export const productSearchValidator = [
     .optional()
     .isInt({ min: 1, max: 100 })
     .withMessage('Limit must be between 1 and 100'),
-];
-
-
-
-export const idValidator = [
-  param('id')
-    .isInt({ min: 1 })
-    .withMessage('ID must be a positive integer'),
 ];
 
 
