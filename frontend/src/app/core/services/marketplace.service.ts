@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
-import { tap, catchError } from 'rxjs/operators';
+import { tap, catchError, map } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { 
   BuyerProfile,
@@ -22,10 +22,35 @@ export class MarketplaceService {
 
   constructor(private http: HttpClient) {}
 
+  private transformBuyerProfile(data: any): BuyerProfile {
+    return {
+      id: data.id,
+      userId: data.user_id,
+      companyName: data.company_name,
+      fullName: data.full_name,
+      email: data.email,
+      phone: data.phone,
+      totalOrders: data.total_orders || 0,
+      totalSpent: data.total_spent || 0,
+      averageOrderValue: data.average_order_value || 0,
+      defaultShippingAddressId: data.default_shipping_address_id,
+      createdAt: data.created_at
+    };
+  }
+
   getBuyerProfile(): Observable<ApiResponse<BuyerProfile>> {
-    return this.http.get<ApiResponse<BuyerProfile>>(
+    return this.http.get<ApiResponse<any>>(
       `${this.apiUrl}/profile/buyer`
     ).pipe(
+      map(response => {
+        if (response.success && response.data) {
+          return {
+            ...response,
+            data: this.transformBuyerProfile(response.data)
+          };
+        }
+        return response;
+      }),
       catchError(error => {
         console.error('Error fetching buyer profile:', error);
         return throwError(() => error);

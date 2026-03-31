@@ -1,10 +1,13 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
+import { forkJoin } from 'rxjs';
 import { BuyerHeaderComponent } from '../shared/buyer-header/buyer-header.component';
 import { BuyerFooterComponent } from '../shared/buyer-footer/buyer-footer.component';
 import { OrderService } from '../../../core/services/order.service';
-import { OrderSummary } from '../../../core/models/marketplace.model';
+import { UserService, UserProfile } from '../../../core/services/user.service';
+import { MarketplaceService } from '../../../core/services/marketplace.service';
+import { OrderSummary, BuyerProfile } from '../../../core/models/marketplace.model';
 
 interface OrderStats {
   total: number;
@@ -20,19 +23,6 @@ interface SpendingSummary {
   avgOrder: number;
 }
 
-interface ApiOrder {
-  id: number;
-  order_number: string;
-  total_amount: number;
-  order_status: string;
-  payment_status: string;
-  item_count: number;
-  seller_count: number;
-  first_item_image: string | null;
-  first_item_id: number | null;
-  created_at: string;
-}
-
 @Component({
   selector: 'app-buyer-dashboard',
   standalone: true,
@@ -42,7 +32,11 @@ interface ApiOrder {
 })
 export class BuyerDashboardComponent implements OnInit {
   private orderService = inject(OrderService);
+  private userService = inject(UserService);
+  private marketplaceService = inject(MarketplaceService);
 
+  userProfile = signal<UserProfile | null>(null);
+  buyerProfile = signal<BuyerProfile | null>(null);
   orderStats = signal<OrderStats>({ total: 0, pending: 0, confirmed: 0, shipped: 0, delivered: 0 });
   recentOrders = signal<OrderSummary[]>([]);
   spending = signal<SpendingSummary>({ totalSpent: 0, thisMonth: 0, avgOrder: 0 });
@@ -52,64 +46,89 @@ export class BuyerDashboardComponent implements OnInit {
     this.loadDashboardData();
   }
 
-  private mapApiOrder(apiOrder: ApiOrder): OrderSummary {
-    return {
-      id: apiOrder.id,
-      orderNumber: apiOrder.order_number,
-      totalAmount: apiOrder.total_amount,
-      orderStatus: apiOrder.order_status as any,
-      paymentStatus: apiOrder.payment_status as any,
-      itemCount: apiOrder.item_count,
-      sellerCount: apiOrder.seller_count,
-      firstItemImage: apiOrder.first_item_image || null,
-      firstItemId: apiOrder.first_item_id || null,
-      createdAt: new Date(apiOrder.created_at)
-    };
-  }
-
   private loadDashboardData(): void {
-    this.orderService.getMyOrders().subscribe(
-      (res) => {
-        const paginatedData = res.data;
-        const apiOrders = paginatedData?.data || [];
-        
-        if (res.success && Array.isArray(apiOrders)) {
-          const orders = apiOrders.map((o: any) => this.mapApiOrder(o));
+    forkJoin({
+      userProfile: this.userService.getProfile(),
+      buyerProfile: this.marketplaceService.getBuyerProfile(),
+      orders: this.orderService.getMyOrders()
+    }).subscribe({
+      next: (results) => {
+        // Set user profile
+        if (results.userProfile.success && results.userProfile.data) {
+          this.userProfile.set(results.userProfile.data);
+        }
+
+        // Set buyer profile (contains spending stats from backend)
+        if (results.buyerProfile.success && results.buyerProfile.data) {
+          const bp = results.buyerProfile.data;
+          this.buyerProfile.set(bp);
           
+          // Use backend-calculated spending stats
+          this.spending.set({
+            totalSpent: bp.totalSpent || 0,
+            thisMonth: this.calculateThisMonthSpending(results.orders),
+            avgOrder: bp.averageOrderValue || 0
+          });
+        }
+
+        // Process orders for stats and recent orders
+        if (results.orders.success && results.orders.data) {
+          const ordersData = results.orders.data;
+          const orders = ordersData.data || [];
+          
+          // Use buyerProfile.totalOrders for accurate count (excludes cancelled)
+          const totalFromProfile = this.buyerProfile()?.totalOrders || ordersData.total || orders.length;
+          
+          // Calculate order stats by status
           this.orderStats.set({
-            total: orders.length,
-            pending: orders.filter(o => o.orderStatus === 'pending').length,
-            confirmed: orders.filter(o => o.orderStatus === 'confirmed').length,
-            shipped: orders.filter(o => o.orderStatus === 'shipped').length,
-            delivered: orders.filter(o => o.orderStatus === 'delivered').length
+            total: totalFromProfile,
+            pending: orders.filter((o: OrderSummary) => o.orderStatus === 'pending').length,
+            confirmed: orders.filter((o: OrderSummary) => o.orderStatus === 'confirmed').length,
+            shipped: orders.filter((o: OrderSummary) => o.orderStatus === 'shipped').length,
+            delivered: orders.filter((o: OrderSummary) => o.orderStatus === 'delivered').length
           });
 
-          const sorted = [...orders].sort((a, b) => 
+          // Sort and get recent orders
+          const sorted = [...orders].sort((a: OrderSummary, b: OrderSummary) => 
             new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
           );
           this.recentOrders.set(sorted.slice(0, 5));
 
-          const totalSpent = orders.reduce((sum, o) => sum + Number(o.totalAmount), 0);
-          const now = new Date();
-          const thisMonthOrders = orders.filter(o => {
-            const d = new Date(o.createdAt);
-            return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
-          });
-          const thisMonth = thisMonthOrders.reduce((sum, o) => sum + Number(o.totalAmount), 0);
-
-          this.spending.set({
-            totalSpent,
-            thisMonth,
-            avgOrder: orders.length > 0 ? totalSpent / orders.length : 0
-          });
+          // If buyer profile didn't have spending data, calculate from orders
+          if (!this.buyerProfile()?.totalSpent) {
+            const totalSpent = orders.reduce((sum: number, o: OrderSummary) => sum + Number(o.totalAmount), 0);
+            const thisMonth = this.calculateThisMonthFromOrders(orders);
+            this.spending.set({
+              totalSpent,
+              thisMonth,
+              avgOrder: orders.length > 0 ? totalSpent / orders.length : 0
+            });
+          }
         }
+
         this.loading.set(false);
       },
-      (err) => {
+      error: (err) => {
         console.error('Error loading dashboard:', err);
         this.loading.set(false);
       }
-    );
+    });
+  }
+
+  private calculateThisMonthSpending(ordersResponse: any): number {
+    if (!ordersResponse.success || !ordersResponse.data?.data) {
+      return 0;
+    }
+    return this.calculateThisMonthFromOrders(ordersResponse.data.data);
+  }
+
+  private calculateThisMonthFromOrders(orders: OrderSummary[]): number {
+    const now = new Date();
+    const thisMonthOrders = orders.filter((o: OrderSummary) => {
+      const d = new Date(o.createdAt);
+      return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+    });
+    return thisMonthOrders.reduce((sum: number, o: OrderSummary) => sum + Number(o.totalAmount), 0);
   }
 
   formatPrice(price: number): string {

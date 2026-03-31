@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, ActivatedRoute, Router } from '@angular/router';
 import { Location } from '@angular/common';
@@ -20,6 +20,10 @@ export class OrderDetailComponent implements OnInit {
   loading = true;
   error: string | null = null;
   cancelling = false;
+  
+  // Cancel modal state
+  showCancelModal = signal(false);
+  cancelError = signal<string | null>(null);
 
   constructor(
     private orderService: OrderService,
@@ -58,23 +62,39 @@ export class OrderDetailComponent implements OnInit {
 
   cancelOrder(): void {
     if (!this.orderDetail || this.cancelling) return;
-    if (!confirm('Are you sure you want to cancel this order?')) return;
+    this.showCancelModal.set(true);
+    this.cancelError.set(null);
+  }
 
+  confirmCancel(): void {
+    if (!this.orderDetail || this.cancelling) return;
+    
     this.cancelling = true;
+    this.cancelError.set(null);
 
     this.orderService.cancelOrder(this.orderDetail.order.id).subscribe({
       next: (response: ApiResponse<OrderDetail>) => {
-        if (response.success && response.data) {
-          this.orderDetail = response.data;
+        if (response.success) {
+          this.showCancelModal.set(false);
+          this.router.navigate(['/buyer/orders'], { 
+            queryParams: { status: 'cancelled' } 
+          });
         }
         this.cancelling = false;
       },
       error: (err) => {
-        alert('Failed to cancel order. Please try again.');
+        this.cancelError.set('Failed to cancel order. Please try again.');
         this.cancelling = false;
         console.error('Error cancelling order:', err);
       }
     });
+  }
+
+  closeCancelModal(): void {
+    if (!this.cancelling) {
+      this.showCancelModal.set(false);
+      this.cancelError.set(null);
+    }
   }
 
   canCancel(): boolean {

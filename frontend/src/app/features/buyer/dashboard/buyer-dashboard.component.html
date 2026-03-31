@@ -2,11 +2,20 @@
 
 <div class="dashboard-container">
   <div class="dashboard-content">
-    <h1 class="page-title">Dashboard</h1>
-
     <div *ngIf="loading()" class="loading">Loading dashboard...</div>
 
     <div *ngIf="!loading()">
+      <section class="profile-section">
+        <div class="profile-card">
+          <div class="profile-info">
+            <h1 class="welcome-message">Welcome, {{ userProfile()?.full_name || 'User' }}</h1>
+            <p class="profile-email">{{ userProfile()?.email }}</p>
+            <p *ngIf="userProfile()?.company_name" class="profile-company">{{ userProfile()?.company_name }}</p>
+          </div>
+          <a routerLink="/buyer/profile" class="edit-profile-link">Edit Profile</a>
+        </div>
+      </section>
+
       <section class="stats-section">
         <h2>Order Statistics</h2>
         <div class="stats-grid">
