@@ -1,131 +1,100 @@
+<app-buyer-header></app-buyer-header>
+
 <div class="cart-container">
-  <!-- Header -->
   <header class="cart-header">
     <div class="header-content">
-      <a routerLink="/buyer" class="back-link">
-        <span class="back-icon">&larr;</span>
-        Dashboard
+      <a routerLink="/buyer/products" class="back-link">
+        <span class="back-icon">←</span>
+        Continue Shopping
       </a>
       <h1>Shopping Cart</h1>
-      <span class="item-count" *ngIf="cart && cart.totalItems > 0">
-        {{ cart.totalItems }} item{{ cart.totalItems !== 1 ? 's' : '' }}
-      </span>
+      <span class="item-count">{{ totalItems }} items</span>
     </div>
   </header>
 
   <main class="cart-main">
-    <!-- Loading State -->
-    <div class="loading-container" *ngIf="loading">
-      <app-loading-spinner message="Loading your cart..."></app-loading-spinner>
+    <div *ngIf="loading" class="loading-container">
+      <p>Loading cart...</p>
     </div>
 
-    <!-- Error State -->
-    <div class="error-container" *ngIf="error && !loading">
+    <div *ngIf="error" class="error-container">
       <div class="error-card">
         <span class="error-icon">!</span>
         <p>{{ error }}</p>
-        <button class="retry-btn" (click)="loadCart()">Try Again</button>
+        <button class="retry-btn" (click)="loadCart()">Retry</button>
       </div>
     </div>
 
-    <!-- Empty Cart -->
-    <div class="empty-container" *ngIf="!loading && !error && isCartEmpty()">
-      <app-empty-state
-        icon="cart"
-        title="Your cart is empty"
-        message="Looks like you haven't added any saffron to your cart yet. Browse our premium selection to get started."
-        actionLabel="Browse Products"
-        actionLink="/buyer/products">
-      </app-empty-state>
+    <div *ngIf="!loading && !error && !hasItems" class="empty-container">
+      <div class="error-card">
+        <span class="error-icon">🛒</span>
+        <p>Your cart is empty</p>
+        <a routerLink="/buyer/products" class="retry-btn">Browse Products</a>
+      </div>
     </div>
 
-    <!-- Cart Content -->
-    <div class="cart-content" *ngIf="!loading && !error && !isCartEmpty()">
+    <div *ngIf="!loading && !error && hasItems" class="cart-content">
       <div class="cart-items">
-        <!-- Group by Seller -->
         <div class="seller-group" *ngFor="let sellerId of getSellerIds()">
           <div class="seller-header">
-            <span class="seller-name">{{ cart!.totalBySeller[sellerId].sellerName }}</span>
-            <span class="seller-subtotal">
-              Subtotal: {{ formatPrice(cart!.totalBySeller[sellerId].subtotal) }}
-            </span>
+            <span class="seller-name">{{ getSellerName(sellerId) }}</span>
+            <span class="seller-subtotal">{{ formatPrice(getSellerSubtotal(sellerId)) }}</span>
           </div>
-
+          
           <div class="cart-item" *ngFor="let item of getItemsBySeller(sellerId)">
             <div class="item-image">
-              <div class="image-placeholder">
-                <span>Saffron</span>
-              </div>
+              <img [src]="getProductImage()" [alt]="item.productName">
             </div>
-
+            
             <div class="item-details">
               <h3 class="item-name">
                 <a [routerLink]="['/buyer/products', item.productId]">{{ item.productName }}</a>
               </h3>
               <div class="item-meta">
                 <span class="item-weight">{{ item.weightGrams }}g</span>
-                <span class="item-sku">SKU: {{ item.sku }}</span>
+                <span class="item-sku">{{ item.sku }}</span>
               </div>
               <p class="item-price">{{ formatPrice(item.price) }} each</p>
-              
-              <div class="stock-warning" *ngIf="item.stockQuantity < 5">
-                <span class="warning-icon">!</span>
-                Only {{ item.stockQuantity }} left in stock
-              </div>
             </div>
-
+            
             <div class="item-quantity">
-              <app-quantity-input
-                [quantity]="item.quantity"
-                [min]="1"
-                [max]="item.stockQuantity"
-                [disabled]="updating[item.id]"
-                (quantityChange)="updateQuantity(item, $event)">
-              </app-quantity-input>
+              <button class="qty-btn" (click)="decreaseQuantity(item)" [disabled]="item.quantity <= 1">−</button>
+              <span class="qty-value">{{ item.quantity }}</span>
+              <button class="qty-btn" (click)="increaseQuantity(item)">+</button>
             </div>
-
+            
             <div class="item-subtotal">
               <span class="subtotal-label">Subtotal</span>
-              <span class="subtotal-value">{{ formatPrice(getItemSubtotal(item)) }}</span>
+              <span class="subtotal-value">{{ formatPrice(item.price * item.quantity) }}</span>
             </div>
-
-            <button 
-              class="remove-btn" 
-              (click)="removeItem(item)"
-              [disabled]="updating[item.id]"
-              title="Remove from cart">
-              <span class="remove-icon">&times;</span>
+            
+            <button class="remove-btn" (click)="removeItem(item)" title="Remove item">
+              <span class="remove-icon">×</span>
             </button>
           </div>
         </div>
 
-        <!-- Clear Cart -->
         <div class="cart-actions">
-          <button class="clear-cart-btn" (click)="clearCart()">
-            Clear Cart
-          </button>
-          <a routerLink="/buyer/products" class="continue-shopping">
-            Continue Shopping
-          </a>
+          <button class="clear-cart-btn" (click)="clearCart()">Clear Cart</button>
+          <a routerLink="/buyer/products" class="continue-shopping">← Continue Shopping</a>
         </div>
       </div>
 
-      <!-- Order Summary Sidebar -->
       <aside class="order-summary">
         <h2>Order Summary</h2>
-
+        
         <div class="summary-items">
           <div class="summary-row" *ngFor="let sellerId of getSellerIds()">
-            <span class="seller-label">{{ cart!.totalBySeller[sellerId].sellerName }}</span>
-            <span class="seller-total">{{ formatPrice(cart!.totalBySeller[sellerId].subtotal) }}</span>
+            <span class="seller-label">{{ getSellerName(sellerId) }} ({{ getSellerItemCount(sellerId) }})</span>
+            <span class="seller-total">{{ formatPrice(getSellerSubtotal(sellerId)) }}</span>
           </div>
         </div>
 
         <div class="summary-divider"></div>
 
         <div class="summary-row subtotal">
-          <span>Subtotal ({{ cart!.totalItems }} items)</span>
-          <span>{{ formatPrice(cart!.totalPrice) }}</span>
+          <span>Subtotal</span>
+          <span>{{ formatPrice(totalPrice) }}</span>
         </div>
 
         <div class="summary-row shipping">
@@ -136,22 +105,22 @@
         <div class="summary-divider"></div>
 
         <div class="summary-row total">
-          <span>Estimated Total</span>
-          <span class="total-value">{{ formatPrice(cart!.totalPrice) }}</span>
+          <span>Total</span>
+          <span class="total-value">{{ formatPrice(totalPrice) }}</span>
         </div>
 
-        <button 
-          class="checkout-btn" 
-          (click)="proceedToCheckout()"
-          [disabled]="isCartEmpty()">
+        <button class="checkout-btn" routerLink="/buyer/checkout">
           Proceed to Checkout
         </button>
 
         <div class="summary-notes">
-          <p><span class="note-icon">*</span> Free shipping on orders over $100</p>
-          <p><span class="note-icon">*</span> Secure payment processing</p>
+          <p><span class="note-icon">🌿</span> 100% Organic Premium Saffron</p>
+
+          <p><span class="note-icon">✓</span> Quality Guaranteed</p>
         </div>
       </aside>
     </div>
   </main>
 </div>
+
+<app-buyer-footer></app-buyer-footer>

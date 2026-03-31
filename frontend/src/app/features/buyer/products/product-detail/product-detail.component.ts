@@ -1,11 +1,14 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { ProductResponse, ProductGrade } from '../../../../core/models/marketplace.model';
 import { ProductService } from '../../../../core/services/product.service';
+import { CartService } from '../../../../core/services/cart.service';
 import { QuantityInputComponent } from '../../../../shared/components/quantity-input/quantity-input.component';
 import { StarRatingComponent } from '../../../../shared/components/star-rating/star-rating.component';
+import { BuyerHeaderComponent } from '../../shared/buyer-header/buyer-header.component';
+import { BuyerFooterComponent } from '../../shared/buyer-footer/buyer-footer.component';
 
 @Component({
   selector: 'app-product-detail',
@@ -15,7 +18,9 @@ import { StarRatingComponent } from '../../../../shared/components/star-rating/s
     FormsModule,
     RouterModule,
     QuantityInputComponent,
-    StarRatingComponent
+    StarRatingComponent,
+    BuyerHeaderComponent,
+    BuyerFooterComponent
   ],
   templateUrl: './product-detail.component.html',
   styleUrls: ['./product-detail.component.css']
@@ -31,7 +36,9 @@ export class ProductDetailComponent implements OnInit {
   constructor(
     private route: ActivatedRoute,
     private router: Router,
-    private productService: ProductService
+    private productService: ProductService,
+    private cartService: CartService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
@@ -44,18 +51,25 @@ export class ProductDetailComponent implements OnInit {
   loadProduct(id: number): void {
     this.isLoading = true;
     this.error = null;
+    console.log('loadProduct called, id:', id);
 
     this.productService.getProductById(id).subscribe({
       next: (response) => {
+        console.log('Product loaded, response.data:', response.data);
+        console.log('Product name:', response.data?.product?.productName);
         this.product = response.data;
+        console.log('this.product set:', this.product);
         if (this.product?.variants?.length) {
           this.selectedVariantId = this.product.variants[0].id;
         }
         this.isLoading = false;
+        this.cdr.detectChanges();
+        console.log('isLoading set to false');
       },
       error: (err) => {
         this.error = 'Failed to load product. Please try again.';
         this.isLoading = false;
+        this.cdr.detectChanges();
         console.error('Error loading product:', err);
       }
     });
@@ -112,12 +126,21 @@ export class ProductDetailComponent implements OnInit {
       alert('Please select a variant');
       return;
     }
-    console.log('Add to cart:', {
-      productId: this.product?.product.id,
-      variantId: this.selectedVariantId,
-      quantity: this.quantity
+
+    this.cartService.addItem(this.selectedVariant.id, this.quantity).subscribe({
+      next: (response) => {
+        if (response.success) {
+          alert(`Added ${this.quantity} item(s) to cart!`);
+          this.router.navigate(['/buyer/cart']);
+        } else {
+          alert('Failed to add to cart. Please try again.');
+        }
+      },
+      error: (err) => {
+        console.error('Error adding to cart:', err);
+        alert('Failed to add to cart. Please try again.');
+      }
     });
-    alert(`Added ${this.quantity} item(s) to cart!`);
   }
 
   getProductImage(): string {

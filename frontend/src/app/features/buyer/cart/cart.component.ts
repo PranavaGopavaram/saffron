@@ -1,36 +1,27 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { CartService } from '../../../core/services/cart.service';
-import { 
-  CartSummary, 
-  CartItemWithDetails,
-  ApiResponse 
-} from '../../../core/models/marketplace.model';
-import { LoadingSpinnerComponent, QuantityInputComponent, EmptyStateComponent } from '../../../shared/components';
+import { CartSummary, CartItemWithDetails, ApiResponse } from '../../../core/models/marketplace.model';
+import { BuyerHeaderComponent } from '../shared/buyer-header/buyer-header.component';
+import { BuyerFooterComponent } from '../shared/buyer-footer/buyer-footer.component';
 
 @Component({
   selector: 'app-cart',
   standalone: true,
-  imports: [
-    CommonModule, 
-    RouterModule, 
-    LoadingSpinnerComponent, 
-    QuantityInputComponent,
-    EmptyStateComponent
-  ],
+  imports: [CommonModule, RouterModule, BuyerHeaderComponent, BuyerFooterComponent],
   templateUrl: './cart.component.html',
   styleUrls: ['./cart.component.css']
 })
 export class CartComponent implements OnInit {
   cart: CartSummary | null = null;
   loading = true;
-  updating: { [key: number]: boolean } = {};
   error: string | null = null;
 
   constructor(
     private cartService: CartService,
-    private router: Router
+    private router: Router,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
@@ -39,69 +30,125 @@ export class CartComponent implements OnInit {
 
   loadCart(): void {
     this.loading = true;
-    this.error = null;
-
     this.cartService.getCart().subscribe({
       next: (response: ApiResponse<CartSummary>) => {
         if (response.success && response.data) {
           this.cart = response.data;
         }
         this.loading = false;
+        this.cdr.detectChanges();
       },
-      error: (err) => {
-        this.error = 'Failed to load cart. Please try again.';
+      error: (err: any) => {
+        this.error = 'Failed to load cart';
         this.loading = false;
-        console.error('Error loading cart:', err);
+        this.cdr.detectChanges();
       }
     });
   }
 
-  updateQuantity(item: CartItemWithDetails, newQuantity: number): void {
-    if (newQuantity < 1 || newQuantity > item.stockQuantity) return;
-    if (this.updating[item.id]) return;
+  get items(): CartItemWithDetails[] {
+    return this.cart?.items || [];
+  }
 
-    this.updating[item.id] = true;
+  get totalPrice(): number {
+    return this.cart?.totalPrice || 0;
+  }
+
+  get totalItems(): number {
+    return this.cart?.totalItems || 0;
+  }
+
+  get hasItems(): boolean {
+    return this.items.length > 0;
+  }
+
+  getSellerIds(): number[] {
+    if (!this.cart?.totalBySeller) return [];
+    return Object.keys(this.cart.totalBySeller).map(id => parseInt(id, 10));
+  }
+
+  getSellerName(sellerId: number): string {
+    return this.cart?.totalBySeller[sellerId]?.sellerName || 'Seller';
+  }
+
+  getSellerSubtotal(sellerId: number): number {
+    return this.cart?.totalBySeller[sellerId]?.subtotal || 0;
+  }
+
+  getSellerItemCount(sellerId: number): number {
+    return this.cart?.totalBySeller[sellerId]?.itemCount || 0;
+  }
+
+  getItemsBySeller(sellerId: number): CartItemWithDetails[] {
+    return this.items.filter(item => item.sellerId === sellerId);
+  }
+
+  getProductImage(): string {
+    return 'assets/images/g1.jpeg';
+  }
+
+  increaseQuantity(item: CartItemWithDetails): void {
+    this.updateQuantity(item, item.quantity + 1);
+  }
+
+  decreaseQuantity(item: CartItemWithDetails): void {
+    if (item.quantity > 1) {
+      this.updateQuantity(item, item.quantity - 1);
+    }
+  }
+
+  updateQuantity(item: CartItemWithDetails, newQuantity: number): void {
+    if (newQuantity < 1) return;
+    
+    const originalQuantity = item.quantity;
+    item.quantity = newQuantity;
+    this.recalculateTotals();
 
     this.cartService.updateItemQuantity(item.id, newQuantity).subscribe({
       next: (response: ApiResponse<CartSummary>) => {
         if (response.success && response.data) {
           this.cart = response.data;
         }
-        this.updating[item.id] = false;
+        this.cdr.detectChanges();
       },
-      error: (err) => {
-        console.error('Error updating quantity:', err);
-        this.updating[item.id] = false;
+      error: (err: any) => {
+        item.quantity = originalQuantity;
+        this.recalculateTotals();
+        this.cdr.detectChanges();
       }
     });
   }
 
-  removeItem(item: CartItemWithDetails): void {
-    if (this.updating[item.id]) return;
+  private recalculateTotals(): void {
+    if (!this.cart) return;
+    this.cart.totalItems = this.items.reduce((sum, item) => sum + item.quantity, 0);
+    this.cart.totalPrice = this.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  }
 
-    this.updating[item.id] = true;
+  removeItem(item: CartItemWithDetails): void {
+    const remainingItems = this.items.filter(i => i.id !== item.id);
+    this.cart = {
+      items: remainingItems,
+      totalItems: remainingItems.reduce((sum, i) => sum + i.quantity, 0),
+      totalPrice: remainingItems.reduce((sum, i) => sum + (i.price * i.quantity), 0),
+      totalBySeller: this.cart!.totalBySeller
+    };
+    this.cdr.detectChanges();
 
     this.cartService.removeItem(item.id).subscribe({
       next: (response: ApiResponse<CartSummary>) => {
         if (response.success && response.data) {
           this.cart = response.data;
         }
-        this.updating[item.id] = false;
+        this.cdr.detectChanges();
       },
-      error: (err) => {
-        console.error('Error removing item:', err);
-        this.updating[item.id] = false;
+      error: (err: any) => {
+        this.cdr.detectChanges();
       }
     });
   }
 
   clearCart(): void {
-    if (!this.cart || this.cart.items.length === 0) return;
-
-    if (!confirm('Are you sure you want to clear your cart?')) return;
-
-    this.loading = true;
-
     this.cartService.clearCart().subscribe({
       next: () => {
         this.cart = {
@@ -110,42 +157,15 @@ export class CartComponent implements OnInit {
           totalPrice: 0,
           totalBySeller: {}
         };
-        this.loading = false;
+        this.cdr.detectChanges();
       },
-      error: (err) => {
-        console.error('Error clearing cart:', err);
-        this.loading = false;
+      error: (err: any) => {
+        this.cdr.detectChanges();
       }
     });
   }
 
-  proceedToCheckout(): void {
-    if (!this.cart || this.cart.items.length === 0) return;
-    this.router.navigate(['/buyer/checkout']);
-  }
-
-  getSellerIds(): number[] {
-    if (!this.cart?.totalBySeller) return [];
-    return Object.keys(this.cart.totalBySeller).map(id => parseInt(id, 10));
-  }
-
-  getItemsBySeller(sellerId: number): CartItemWithDetails[] {
-    if (!this.cart?.items) return [];
-    return this.cart.items.filter(item => item.sellerId === sellerId);
-  }
-
   formatPrice(price: number): string {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD'
-    }).format(price);
-  }
-
-  getItemSubtotal(item: CartItemWithDetails): number {
-    return item.price * item.quantity;
-  }
-
-  isCartEmpty(): boolean {
-    return !this.cart || this.cart.items.length === 0;
+    return '₹' + price.toLocaleString('en-IN');
   }
 }

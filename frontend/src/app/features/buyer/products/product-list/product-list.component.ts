@@ -1,10 +1,12 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterModule } from '@angular/router';
+import { Router, RouterModule, ActivatedRoute } from '@angular/router';
 import { ProductResponse, ProductGrade } from '../../../../core/models/marketplace.model';
 import { ProductCardComponent } from '../../../../shared/components';
 import { ProductService } from '../../../../core/services/product.service';
+import { BuyerHeaderComponent } from '../../shared/buyer-header/buyer-header.component';
+import { BuyerFooterComponent } from '../../shared/buyer-footer/buyer-footer.component';
 
 @Component({
   selector: 'app-product-list',
@@ -13,7 +15,9 @@ import { ProductService } from '../../../../core/services/product.service';
     CommonModule,
     FormsModule,
     RouterModule,
-    ProductCardComponent
+    ProductCardComponent,
+    BuyerHeaderComponent,
+    BuyerFooterComponent
   ],
   templateUrl: './product-list.component.html',
   styleUrls: ['./product-list.component.css']
@@ -33,8 +37,7 @@ export class ProductListComponent implements OnInit {
     { value: '', label: 'All Grades' },
     { value: ProductGrade.PREMIUM, label: 'Premium' },
     { value: ProductGrade.FIRST, label: 'Grade I' },
-    { value: ProductGrade.SECOND, label: 'Grade II' },
-    { value: ProductGrade.THIRD, label: 'Grade III' }
+    { value: ProductGrade.SECOND, label: 'Grade II' }
   ];
 
   selectedGrade: string = '';
@@ -60,13 +63,26 @@ export class ProductListComponent implements OnInit {
 
   constructor(
     private router: Router,
+    private route: ActivatedRoute,
     private productService: ProductService,
     private cdr: ChangeDetectorRef
   ) { }
 
   ngOnInit(): void {
-    console.log('ProductListComponent: ngOnInit called');
-    this.loadProducts();
+    console.log('ProductListComponent: ngOnInit - showFilters:', this.showFilters, 'selectedGrade:', this.selectedGrade);
+    
+    this.route.queryParams.subscribe(params => {
+      console.log('Query params received:', params);
+      if (params['grade']) {
+        this.selectedGrade = params['grade'];
+        console.log('Set selectedGrade from URL:', this.selectedGrade);
+      }
+      if (params['origin']) {
+        this.originSearch = params['origin'];
+        console.log('Set originSearch from URL:', this.originSearch);
+      }
+      this.loadProducts();
+    });
   }
 
   loadProducts(): void {
@@ -86,7 +102,7 @@ export class ProductListComponent implements OnInit {
       limit: this.filters.limit
     };
 
-    console.log('ProductListComponent: Calling API with filters:', filters);
+    console.log('loadProducts - API filters:', JSON.stringify(filters));
 
     this.productService.getProducts(filters).subscribe({
       next: (response) => {
@@ -119,9 +135,24 @@ export class ProductListComponent implements OnInit {
   }
 
   applyFilters(): void {
+    console.log('applyFilters called - selectedGrade:', this.selectedGrade, 'origin:', this.originSearch, 'minPrice:', this.minPrice, 'maxPrice:', this.maxPrice, 'sort:', this.selectedSort);
     this.filters.page = 1;
-    this.showFilters = false;
     this.loadProducts();
+  }
+
+  onGradeChange(): void {
+    console.log('onGradeChange - selectedGrade:', this.selectedGrade);
+    this.applyFilters();
+  }
+
+  onOriginChange(): void {
+    console.log('onOriginChange - originSearch:', this.originSearch);
+    this.applyFilters();
+  }
+
+  onPriceChange(): void {
+    console.log('onPriceChange - minPrice:', this.minPrice, 'maxPrice:', this.maxPrice);
+    this.applyFilters();
   }
 
   onSearch(): void {

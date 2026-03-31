@@ -2,65 +2,142 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1rem 2rem;
-  background: #fff;
-  border-bottom: 1px solid #eee;
+  padding: 0.75rem 2rem;
+  background: #5c141d;
+  border-bottom: 3px solid #D4AF37;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+}
+
+.header-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.header-brand:hover {
+  opacity: 0.9;
+}
+
+.brand-icon {
+  font-size: 1.5rem;
+  color: #D4AF37;
 }
 
 .header-brand h1 {
   margin: 0;
-  font-size: 1.5rem;
-  color: #8b5a2b;
-}
-
-.welcome-text {
-  font-size: 0.875rem;
-  color: #666;
+  font-size: 1.25rem;
+  color: #D4AF37;
+  font-weight: 600;
+  letter-spacing: 0.5px;
 }
 
 .header-nav {
   display: flex;
-  gap: 1rem;
+  align-items: center;
+  gap: 0.5rem;
 }
 
-.nav-link {
-  padding: 0.5rem 1rem;
+.header-nav a {
+  color: #E8D5A3;
   text-decoration: none;
-  color: #333;
-  border-radius: 4px;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.header-nav a:hover {
+  background: rgba(212, 175, 55, 0.2);
+  color: #D4AF37;
+}
+
+.header-nav a.active {
+  background: #D4AF37;
+  color: #3D2314;
+}
+
+.cart-link {
   position: relative;
-}
-
-.nav-link:hover {
-  background: #f5f5f5;
-}
-
-.nav-link.active {
-  background: #8b5a2b;
-  color: #fff;
 }
 
 .cart-badge {
   position: absolute;
   top: -4px;
-  right: -4px;
-  background: #e74c3c;
-  color: #fff;
-  font-size: 0.7rem;
+  right: 2px;
+  background: #D4AF37;
+  color: #3D2314;
+  font-size: 0.625rem;
+  font-weight: 700;
   padding: 2px 6px;
   border-radius: 10px;
+  min-width: 16px;
+  text-align: center;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.welcome-text {
+  font-size: 0.875rem;
+  color: #E8D5A3;
 }
 
 .logout-btn {
-  padding: 0.5rem 1rem;
-  background: none;
-  border: 1px solid #e74c3c;
-  color: #e74c3c;
-  border-radius: 4px;
+  padding: 0.5rem 1.25rem;
+  background: #D4AF37;
+  border: none;
+  color: #3D2314;
+  border-radius: 6px;
+  font-weight: 600;
   cursor: pointer;
+  font-size: 0.875rem;
+  transition: all 0.2s;
 }
 
 .logout-btn:hover {
-  background: #e74c3c;
-  color: #fff;
+  background: #E8D5A3;
+}
+
+.user-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: transparent;
+  border: 2px solid #D4AF37;
+  color: #D4AF37;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.2s;
+}
+
+.user-avatar:hover {
+  background: #D4AF37;
+  color: #3D2314;
+}
+
+@media (max-width: 900px) {
+  .header-nav {
+    display: none;
+  }
+}
+
+@media (max-width: 600px) {
+  .welcome-text {
+    display: none;
+  }
 }

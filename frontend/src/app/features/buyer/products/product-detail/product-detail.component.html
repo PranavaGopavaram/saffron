@@ -1,3 +1,5 @@
+<app-buyer-header></app-buyer-header>
+
 <div class="product-detail-container" *ngIf="!isLoading && !error && product">
   <div class="breadcrumb">
     <a routerLink="/buyer/products">Products</a>
@@ -125,3 +127,5 @@
     <button class="back-btn" (click)="goBack()">Back to Products</button>
   </div>
 </div>
+
+<app-buyer-footer></app-buyer-footer>

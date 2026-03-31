@@ -1,14 +1,17 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, ActivatedRoute, Router } from '@angular/router';
+import { Location } from '@angular/common';
 import { OrderService } from '../../../../core/services/order.service';
 import { OrderDetail, OrderItemDetail, OrderStatus, ApiResponse } from '../../../../core/models/marketplace.model';
 import { LoadingSpinnerComponent } from '../../../../shared/components';
+import { BuyerHeaderComponent } from '../../shared/buyer-header/buyer-header.component';
+import { BuyerFooterComponent } from '../../shared/buyer-footer/buyer-footer.component';
 
 @Component({
   selector: 'app-order-detail',
   standalone: true,
-  imports: [CommonModule, RouterModule, LoadingSpinnerComponent],
+  imports: [CommonModule, RouterModule, LoadingSpinnerComponent, BuyerHeaderComponent, BuyerFooterComponent],
   templateUrl: './order-detail.component.html',
   styleUrls: ['./order-detail.component.css']
 })
@@ -21,7 +24,8 @@ export class OrderDetailComponent implements OnInit {
   constructor(
     private orderService: OrderService,
     private route: ActivatedRoute,
-    private router: Router
+    private router: Router,
+    private location: Location
   ) {}
 
   ngOnInit(): void {
@@ -76,7 +80,6 @@ export class OrderDetailComponent implements OnInit {
   canCancel(): boolean {
     if (!this.orderDetail) return false;
     const status = this.orderDetail.order.orderStatus;
-    // Check both enum and string value for API compatibility
     return status === OrderStatus.PENDING || (status as string) === 'pending';
   }
 
@@ -138,9 +141,9 @@ export class OrderDetailComponent implements OnInit {
   }
 
   formatPrice(price: number): string {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat('en-IN', {
       style: 'currency',
-      currency: 'USD'
+      currency: 'INR'
     }).format(price);
   }
 
@@ -186,7 +189,13 @@ export class OrderDetailComponent implements OnInit {
     return this.orderDetail.items.reduce((sum, item) => sum + item.subtotal, 0);
   }
 
+  viewItemDetail(item: OrderItemDetail): void {
+    if (this.orderDetail?.order?.id && item.id) {
+      this.router.navigate(['/buyer/orders', this.orderDetail.order.id, 'items', item.id]);
+    }
+  }
+
   goBack(): void {
-    this.router.navigate(['/buyer/orders']);
+    this.location.back();
   }
 }

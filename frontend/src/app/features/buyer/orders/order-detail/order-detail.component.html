@@ -1,5 +1,6 @@
+<app-buyer-header></app-buyer-header>
+
 <div class="order-detail-container">
-  <!-- Header -->
   <header class="order-header">
     <div class="header-content">
       <button class="back-btn" (click)="goBack()">
@@ -11,12 +12,10 @@
   </header>
 
   <main class="order-main">
-    <!-- Loading State -->
     <div class="loading-container" *ngIf="loading">
       <app-loading-spinner message="Loading order details..."></app-loading-spinner>
     </div>
 
-    <!-- Error State -->
     <div class="error-container" *ngIf="error && !loading">
       <div class="error-card">
         <span class="error-icon">!</span>
@@ -25,9 +24,7 @@
       </div>
     </div>
 
-    <!-- Order Content -->
     <div class="order-content" *ngIf="!loading && !error && orderDetail">
-      <!-- Order Status Banner -->
       <div class="status-banner" [class]="getStatusClass(orderDetail.order.orderStatus)">
         <div class="status-info">
           <span class="status-label">Order Status</span>
@@ -45,10 +42,8 @@
         </div>
       </div>
 
-      <!-- Main Content Grid -->
       <div class="content-grid">
         <div class="main-column">
-          <!-- Order Items -->
           <section class="section items-section">
             <h2>Order Items</h2>
             
@@ -57,9 +52,12 @@
                 <span class="seller-name">{{ entry.value.sellerName }}</span>
               </div>
               
-              <div class="item-row" *ngFor="let item of entry.value.items">
+              <div class="item-row" 
+                 *ngFor="let item of entry.value.items"
+                 (click)="viewItemDetail(item)">
                 <div class="item-image">
-                  <div class="image-placeholder">Saffron</div>
+                  <img *ngIf="item.image" [src]="item.image" [alt]="item.productName" class="product-image">
+                  <div *ngIf="!item.image" class="image-placeholder">Saffron</div>
                 </div>
                 <div class="item-details">
                   <h4 class="item-name">{{ item.productName }}</h4>
@@ -80,7 +78,6 @@
             </div>
           </section>
 
-          <!-- Shipping Address -->
           <section class="section address-section">
             <h2>Shipping Address</h2>
             <div class="address-card">
@@ -92,9 +89,7 @@
           </section>
         </div>
 
-        <!-- Sidebar -->
         <aside class="sidebar">
-          <!-- Order Summary -->
           <div class="summary-card">
             <h3>Order Summary</h3>
             
@@ -117,7 +112,6 @@
             </div>
           </div>
 
-          <!-- Order Info -->
           <div class="info-card">
             <h3>Order Information</h3>
             
@@ -142,7 +136,6 @@
             </div>
           </div>
 
-          <!-- Actions -->
           <div class="actions-card">
             <button 
               class="cancel-btn" 
@@ -165,3 +158,5 @@
     </div>
   </main>
 </div>
+
+<app-buyer-footer></app-buyer-footer>

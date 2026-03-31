@@ -1,9 +1,11 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, ActivatedRoute } from '@angular/router';
 import { OrderService } from '../../../../core/services/order.service';
 import { OrderSummary, ApiResponse, OrderStatus } from '../../../../core/models/marketplace.model';
 import { LoadingSpinnerComponent, EmptyStateComponent, PaginationComponent } from '../../../../shared/components';
+import { BuyerHeaderComponent } from '../../shared/buyer-header/buyer-header.component';
+import { BuyerFooterComponent } from '../../shared/buyer-footer/buyer-footer.component';
 
 type OrderFilter = 'all' | 'pending' | 'shipped' | 'delivered' | 'cancelled';
 
@@ -15,7 +17,9 @@ type OrderFilter = 'all' | 'pending' | 'shipped' | 'delivered' | 'cancelled';
     RouterModule, 
     LoadingSpinnerComponent,
     EmptyStateComponent,
-    PaginationComponent
+    PaginationComponent,
+    BuyerHeaderComponent,
+    BuyerFooterComponent
   ],
   templateUrl: './order-list.component.html',
   styleUrls: ['./order-list.component.css']
@@ -27,18 +31,17 @@ export class OrderListComponent implements OnInit {
   error: string | null = null;
   activeFilter: OrderFilter = 'all';
 
-  // Pagination
   currentPage = 1;
   itemsPerPage = 10;
   totalPages = 1;
 
   constructor(
     private orderService: OrderService,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
-    // Check for status query param
     this.route.queryParams.subscribe(params => {
       if (params['status']) {
         this.activeFilter = params['status'] as OrderFilter;
@@ -51,20 +54,22 @@ export class OrderListComponent implements OnInit {
     this.loading = true;
     this.error = null;
 
-    this.orderService.getMyOrders().subscribe({
-      next: (response: ApiResponse<OrderSummary[]>) => {
+    this.orderService.getMyOrders().subscribe(
+      (response: any) => {
         if (response.success && response.data) {
-          this.orders = response.data;
+          const orders = response.data.data || [];
+          this.orders = orders;
           this.applyFilter();
         }
         this.loading = false;
+        this.cdr.detectChanges();
       },
-      error: (err) => {
+      (err) => {
         this.error = 'Failed to load orders. Please try again.';
         this.loading = false;
-        console.error('Error loading orders:', err);
+        this.cdr.detectChanges();
       }
-    });
+    );
   }
 
   setFilter(filter: OrderFilter): void {
@@ -78,19 +83,20 @@ export class OrderListComponent implements OnInit {
       this.filteredOrders = [...this.orders];
     } else {
       this.filteredOrders = this.orders.filter(order => {
+        const status = order.orderStatus?.toString().toLowerCase();
         if (this.activeFilter === 'pending') {
-          return order.orderStatus === OrderStatus.PENDING || order.orderStatus === OrderStatus.CONFIRMED;
+          return status === 'pending' || status === 'confirmed';
         }
-        return order.orderStatus === this.activeFilter;
+        return status === this.activeFilter;
       });
     }
 
-    // Sort by date (newest first)
     this.filteredOrders.sort((a, b) => 
       new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     );
 
     this.totalPages = Math.ceil(this.filteredOrders.length / this.itemsPerPage);
+    this.cdr.detectChanges();
   }
 
   get paginatedOrders(): OrderSummary[] {
@@ -148,9 +154,9 @@ export class OrderListComponent implements OnInit {
   }
 
   formatPrice(price: number): string {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat('en-IN', {
       style: 'currency',
-      currency: 'USD'
+      currency: 'INR'
     }).format(price);
   }
 

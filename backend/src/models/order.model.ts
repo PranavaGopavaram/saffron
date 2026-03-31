@@ -57,13 +57,17 @@ export interface OrderDetail {
   };
 }
 export interface OrderItemDetail extends OrderItem {
+  product_id: number;
   product_name: string;
   sku: string;
   weight_grams: number;
   seller_name: string;
+  image: string | null;
 }
 export interface CreateOrderRequest {
   shipping_address_id?: number;
+  shipping_cost?: number;
+  shipping_method?: string;
 }
 
 
@@ -83,5 +87,7 @@ export interface OrderSummary {
   payment_status: PaymentStatus;
   item_count: number;
   seller_count: number;
+  first_item_image: string | null;
+  first_item_id: number | null;
   created_at: Date;
 }

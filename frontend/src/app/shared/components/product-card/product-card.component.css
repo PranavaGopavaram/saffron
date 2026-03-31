@@ -40,23 +40,23 @@
 }
 
 .grade-premium {
-  background: linear-gradient(135deg, #f6d365 0%, #fda085 100%);
-  color: #7c4a03;
+  background: #722F37;
+  color: #E8D5A3;
 }
 
 .grade-first {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  background: #D4AF37;
+  color: #3D2314;
 }
 
 .grade-second {
-  background: linear-gradient(135deg, #89f7fe 0%, #66a6ff 100%);
-  color: #1a4a7c;
+  background: #6B4423;
+  color: #E8D5A3;
 }
 
 .grade-third {
-  background: #e0e0e0;
-  color: #555;
+  background: #F5ECD7;
+  color: #6B4423;
 }
 
 .product-info {
@@ -138,12 +138,12 @@
 .product-price {
   font-size: 1.1rem;
   font-weight: 700;
-  color: #667eea;
+  color: #D4AF37;
 }
 
 .add-to-cart-btn {
-  background: #667eea;
-  color: white;
+  background: #D4AF37;
+  color: #3D2314;
   border: none;
   padding: 0.5rem 1rem;
   border-radius: 6px;
@@ -154,8 +154,8 @@
 }
 
 .product-next-page-btn {
-  background: #667eea;
-  color: white;
+  background: #D4AF37;
+  color: #3D2314;
   border: none;
   padding: 0.5rem 1rem;
   border-radius: 6px;
@@ -166,9 +166,9 @@
 }
 
 .add-to-cart-btn:hover {
-  background: #5a6fd6;
+  background: #E8D5A3;
 }
 
 .add-to-cart-btn:active {
-  background: #4e5fc4;
+  background: #D4AF37;
 }

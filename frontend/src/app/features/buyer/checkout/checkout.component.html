@@ -1,5 +1,6 @@
+<app-buyer-header></app-buyer-header>
+
 <div class="checkout-container">
-  <!-- Header -->
   <header class="checkout-header">
     <div class="header-content">
       <a routerLink="/buyer/cart" class="back-link" *ngIf="currentStep !== 'confirmation'">
@@ -9,7 +10,6 @@
       <h1>{{ currentStep === 'confirmation' ? 'Order Confirmed!' : 'Checkout' }}</h1>
     </div>
 
-    <!-- Progress Steps -->
     <div class="progress-steps" *ngIf="currentStep !== 'confirmation'">
       <div class="step" [class.active]="currentStep === 'address'" [class.completed]="currentStep === 'review'">
         <span class="step-number">1</span>
@@ -24,12 +24,11 @@
   </header>
 
   <main class="checkout-main">
-    <!-- Loading State -->
     <div class="loading-container" *ngIf="loading">
       <app-loading-spinner message="Loading checkout..."></app-loading-spinner>
     </div>
 
-    <!-- Empty Cart State -->
+    
     <div class="empty-container" *ngIf="!loading && cart && cart.items.length === 0">
       <app-empty-state
         icon="cart"
@@ -40,18 +39,18 @@
       </app-empty-state>
     </div>
 
-    <!-- Step 1: Address Selection -->
+    
     <div class="checkout-content" *ngIf="!loading && currentStep === 'address' && cart && cart.items.length > 0">
       <div class="checkout-form">
         <h2>Select Shipping Address</h2>
 
-        <!-- Error Message -->
+
         <div class="error-message" *ngIf="error">
           <span class="error-icon">!</span>
           {{ error }}
         </div>
 
-        <!-- Address List -->
+      
         <div class="address-list" *ngIf="addresses.length > 0">
           <div 
             class="address-card" 
@@ -70,13 +69,13 @@
           </div>
         </div>
 
-        <!-- No Addresses Message -->
+
         <div class="no-addresses" *ngIf="addresses.length === 0 && !showAddressForm">
           <p>You don't have any shipping addresses saved.</p>
           <p>Add a new address to continue.</p>
         </div>
 
-        <!-- Add New Address Button -->
+
         <button 
           class="add-address-btn" 
           (click)="toggleAddressForm()"
@@ -85,7 +84,7 @@
           Add New Address
         </button>
 
-        <!-- New Address Form -->
+
         <div class="address-form" *ngIf="showAddressForm">
           <h3>Add New Address</h3>
           
@@ -163,7 +162,34 @@
           </div>
         </div>
 
-        <!-- Continue Button -->
+        <div class="shipping-method-section" *ngIf="cart && cart.items.length > 0">
+          <h3>Select Shipping Method</h3>
+          
+          <div class="shipping-methods">
+            <div 
+              *ngFor="let method of shippingMethods"
+              class="method-card"
+              [class.selected]="selectedShippingMethod?.id === method.id"
+              (click)="selectShippingMethod(method)">
+              
+              <div class="method-icon">{{ method.icon }}</div>
+              <div class="method-info">
+                <span class="method-name">{{ method.name }}</span>
+                <span class="method-desc">{{ method.description }}</span>
+                <span class="method-estimate">{{ method.estimatedDays }}</span>
+              </div>
+              <div class="method-cost">
+                <span *ngIf="method.freeThreshold && cart.totalPrice >= method.freeThreshold" class="free">FREE</span>
+                <span *ngIf="!(method.freeThreshold && cart.totalPrice >= method.freeThreshold)">{{ formatPrice(method.cost) }}</span>
+              </div>
+            </div>
+          </div>
+          
+          <p class="free-shipping-info" *ngIf="showFreeShippingInfo()">
+            Add {{ formatPrice(getFreeShippingRemaining()) }} more for free {{ selectedShippingMethod?.name }}!
+          </p>
+        </div>
+
         <button 
           class="continue-btn"
           (click)="proceedToReview()"
@@ -173,7 +199,7 @@
         </button>
       </div>
 
-      <!-- Order Summary Sidebar -->
+  
       <aside class="order-summary">
         <h2>Order Summary</h2>
 
@@ -193,9 +219,19 @@
         </div>
 
         <div class="summary-row">
-          <span>Shipping</span>
+          <span>Shipping Method</span>
+          <span>{{ selectedShippingMethod?.name || 'Standard' }}</span>
+        </div>
+
+        <div class="summary-row">
+          <span>Shipping Cost</span>
           <span *ngIf="getShippingCost() === 0" class="free-shipping">FREE</span>
           <span *ngIf="getShippingCost() > 0">{{ formatPrice(getShippingCost()) }}</span>
+        </div>
+
+        <div class="summary-row" *ngIf="selectedShippingMethod">
+          <span>Est. Delivery</span>
+          <span>{{ getEstimatedDeliveryDate() }}</span>
         </div>
 
         <div class="summary-divider"></div>
@@ -211,18 +247,18 @@
       </aside>
     </div>
 
-    <!-- Step 2: Review & Payment -->
+
     <div class="checkout-content" *ngIf="!loading && currentStep === 'review' && cart">
       <div class="checkout-form">
         <h2>Review Your Order</h2>
 
-        <!-- Error Message -->
+
         <div class="error-message" *ngIf="error">
           <span class="error-icon">!</span>
           {{ error }}
         </div>
 
-        <!-- Shipping Address -->
+
         <div class="review-section">
           <div class="section-header">
             <h3>Shipping Address</h3>
@@ -235,7 +271,19 @@
           </div>
         </div>
 
-        <!-- Order Items -->
+        <div class="review-section">
+          <div class="section-header">
+            <h3>Shipping Method</h3>
+            <button class="edit-btn" (click)="backToAddress()">Change</button>
+          </div>
+          <div class="shipping-method-review">
+            <p><strong>{{ selectedShippingMethod?.name }}</strong></p>
+            <p>{{ selectedShippingMethod?.description }}</p>
+            <p class="delivery-date">Expected by: {{ getEstimatedDeliveryDate() }}</p>
+          </div>
+        </div>
+
+
         <div class="review-section">
           <h3>Order Items</h3>
           <div class="order-items">
@@ -253,7 +301,7 @@
           </div>
         </div>
 
-        <!-- Payment Section -->
+
         <div class="review-section">
           <h3>Payment</h3>
           <div class="payment-info">
@@ -261,12 +309,11 @@
               Payment will be processed securely after order confirmation.
             </p>
             <p class="demo-note">
-              <strong>Demo Mode:</strong> No real payment will be charged.
+              <strong>Demo Payment</strong> 
             </p>
           </div>
         </div>
 
-        <!-- Action Buttons -->
         <div class="review-actions">
           <button class="back-btn" (click)="backToAddress()" [disabled]="submitting">
             Back
@@ -336,3 +383,5 @@
     </div>
   </main>
 </div>
+
+<app-buyer-footer></app-buyer-footer>

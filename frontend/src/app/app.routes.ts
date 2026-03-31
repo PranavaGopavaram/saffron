@@ -53,14 +53,19 @@ export const routes: Routes = [
           .then(m => m.OrderListComponent)
       },
       {
+        path: 'orders/:orderId/items/:itemId',
+        loadComponent: () => import('./features/buyer/orders/order-item-detail/order-item-detail.component')
+          .then(m => m.OrderItemDetailComponent)
+      },
+      {
         path: 'orders/:id',
         loadComponent: () => import('./features/buyer/orders/order-detail/order-detail.component')
           .then(m => m.OrderDetailComponent)
       },
       {
-        path: 'addresses',
-        loadComponent: () => import('./features/buyer/addresses/address-list/address-list.component')
-          .then(m => m.AddressListComponent)
+        path: 'profile',
+        loadComponent: () => import('./features/buyer/profile/profile.component')
+          .then(m => m.ProfileComponent)
       },
       {
         path: '',
@@ -89,11 +94,5 @@ export const routes: Routes = [
   },
   
 
-  {
-    path: 'landing',
-    loadChildren: () => import('./features/landing/landing.routes').then(m => m.LANDING_ROUTES)
-  },
-  
-  
   { path: '**', redirectTo: '/auth/login' }
 ];

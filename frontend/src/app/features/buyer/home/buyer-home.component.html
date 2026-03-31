@@ -1,51 +1,55 @@
 <app-buyer-header></app-buyer-header>
 
-<div class="home-container">
-  <section class="quick-actions">
-    <h2>Quick Actions</h2>
-    <div class="action-grid">
-      <a routerLink="/buyer/products" class="action-card primary">
-        <span class="action-icon">🌸</span>
-        <span class="action-text">Browse Saffron</span>
-      </a>
-      <a routerLink="/buyer/cart" class="action-card">
-        <span class="action-icon">🛒</span>
-        <span class="action-text">Cart</span>
-      </a>
-      <a routerLink="/buyer/dashboard" class="action-card">
-        <span class="action-icon">📊</span>
-        <span class="action-text">Dashboard</span>
-      </a>
-      <a routerLink="/buyer/addresses" class="action-card">
-        <span class="action-icon">📍</span>
-        <span class="action-text">Addresses</span>
-      </a>
+<main class="home-container">
+  
+  <section class="hero-section">
+    <div class="hero-left">
+      <div class="mandala-pattern left"></div>
+      <div class="hero-content">
+        <h1>Organic<br>Saffron</h1>
+        <div class="diamond-separator">─── ⋆⋅ᛝ⋅⋆ ───</div>
+        <a routerLink="/buyer/products" class="shop-now-btn">SHOP NOW</a>
+        
+      </div>
+    </div>
+    <div class="hero-right">
+      
+      <img src="https://images.unsplash.com/photo-1613549026674-2b6c58226395?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="Premium Saffron" />
     </div>
   </section>
 
-  <section class="shop-section">
+  <section class="origin-section">
     <h2>Shop by Origin</h2>
-    <div class="origin-grid">
-      <a *ngFor="let origin of origins" 
-         [routerLink]="['/buyer/products']" 
-         [queryParams]="{origin: origin.id}" 
+    <div class="origin-cards">
+      <a *ngFor="let origin of origins"
+         [routerLink]="['/buyer/products']"
+         [queryParams]="{origin: origin.id}"
          class="origin-card">
-        <span class="origin-flag">{{ origin.flag }}</span>
-        <span class="origin-name">{{ origin.name }}</span>
+        <span class="flag">{{ origin.flagUrl }}</span>
+        <div class="origin-info">
+          <span class="origin-name">{{ origin.name }}</span>
+          <span class="origin-desc">{{ origin.description }}</span>
+        </div>
       </a>
     </div>
   </section>
 
-  <section class="shop-section">
+
+  <section class="grade-section">
     <h2>Shop by Grade</h2>
-    <div class="grade-grid">
+    <div class="grade-cards">
       <a *ngFor="let grade of grades"
          [routerLink]="['/buyer/products']"
-         [queryParams]="{grade: grade.id}"
+         [queryParams]="{grade: grade.id === 'all' ? null : grade.id}"
          class="grade-card"
          [ngClass]="grade.class">
-        {{ grade.name }}
+        <img [src]="grade.image" [alt]="grade.name" class="grade-image">
+        <span class="grade-name">{{ grade.name }}</span>
+        <span class="grade-desc">{{ grade.description }}</span>
       </a>
     </div>
   </section>
-</div>
+
+</main>
+
+<app-buyer-footer></app-buyer-footer>

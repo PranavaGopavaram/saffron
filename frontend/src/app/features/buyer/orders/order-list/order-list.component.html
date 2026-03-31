@@ -1,5 +1,6 @@
+<app-buyer-header></app-buyer-header>
+
 <div class="orders-container">
-  <!-- Header -->
   <header class="orders-header">
     <div class="header-content">
       <a routerLink="/buyer" class="back-link">
@@ -11,12 +12,10 @@
   </header>
 
   <main class="orders-main">
-    <!-- Loading State -->
     <div class="loading-container" *ngIf="loading">
       <app-loading-spinner message="Loading your orders..."></app-loading-spinner>
     </div>
 
-    <!-- Error State -->
     <div class="error-container" *ngIf="error && !loading">
       <div class="error-card">
         <span class="error-icon">!</span>
@@ -25,7 +24,6 @@
       </div>
     </div>
 
-    <!-- Empty State -->
     <div class="empty-container" *ngIf="!loading && !error && orders.length === 0">
       <app-empty-state
         icon="orders"
@@ -36,9 +34,7 @@
       </app-empty-state>
     </div>
 
-    <!-- Orders Content -->
     <div class="orders-content" *ngIf="!loading && !error && orders.length > 0">
-      <!-- Filter Tabs -->
       <div class="filter-tabs">
         <button 
           class="filter-tab" 
@@ -77,13 +73,11 @@
         </button>
       </div>
 
-      <!-- No Results in Filter -->
       <div class="no-results" *ngIf="filteredOrders.length === 0">
         <p>No orders found with status "{{ activeFilter }}"</p>
         <button class="reset-filter-btn" (click)="setFilter('all')">Show All Orders</button>
       </div>
 
-      <!-- Orders List -->
       <div class="orders-list" *ngIf="filteredOrders.length > 0">
         <div class="order-card" *ngFor="let order of paginatedOrders">
           <div class="order-header">
@@ -97,6 +91,17 @@
           </div>
 
           <div class="order-body">
+            <div class="order-thumbnail">
+              <img 
+                *ngIf="order.firstItemImage" 
+                [src]="order.firstItemImage" 
+                [alt]="'Order ' + order.orderNumber"
+                class="thumbnail-image">
+              <div *ngIf="!order.firstItemImage" class="thumbnail-placeholder">
+                <span class="placeholder-icon">&#128230;</span>
+              </div>
+            </div>
+
             <div class="order-details">
               <div class="detail-row">
                 <span class="detail-label">Items</span>
@@ -112,7 +117,11 @@
               </div>
             </div>
 
-            <a [routerLink]="['/buyer/orders', order.id]" class="view-details-btn">
+            <a [routerLink]="['/buyer/orders', order.id, 'items', order.firstItemId]" class="view-details-btn" *ngIf="order.firstItemId">
+              View Details
+              <span class="arrow">&rarr;</span>
+            </a>
+            <a [routerLink]="['/buyer/orders', order.id]" class="view-details-btn" *ngIf="!order.firstItemId">
               View Details
               <span class="arrow">&rarr;</span>
             </a>
@@ -120,7 +129,6 @@
         </div>
       </div>
 
-      <!-- Pagination -->
       <div class="pagination-container" *ngIf="totalPages > 1">
         <app-pagination
           [currentPage]="currentPage"
@@ -132,3 +140,5 @@
     </div>
   </main>
 </div>
+
+<app-buyer-footer></app-buyer-footer>

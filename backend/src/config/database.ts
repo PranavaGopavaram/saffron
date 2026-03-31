@@ -1,9 +1,7 @@
 import mysql from 'mysql2/promise';
 import { config } from './env';
 
-/**
- * MySQL connection pool
- */
+
 export const pool = mysql.createPool({
   host: config.database.host,
   port: config.database.port,
@@ -17,10 +15,6 @@ export const pool = mysql.createPool({
   keepAliveInitialDelay: 0, // Immediately send keep-alive
 });
 
-/**
- * Test database connection
- * Should be called on server startup to verify DB is accessible
- */
 export const testConnection = async (): Promise<void> => {
   try {
     // Get a connection from the pool
@@ -74,10 +68,6 @@ export const query = async (sql: string, params?: any[]): Promise<any> => {
   }
 };
 
-/**
- * Close all connections in the pool
- * Should be called on server shutdown
- */
 export const closePool = async (): Promise<void> => {
   try {
     await pool.end();

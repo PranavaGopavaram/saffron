@@ -1,13 +1,12 @@
 .orders-container {
   min-height: 100vh;
-  background: #f5f5f5;
+  background: #f6e6b2;
 }
 
-/* Header */
 .orders-header {
-  background: white;
+  background: #F5ECD7;
   padding: 1rem 2rem;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 4px rgba(92, 20, 29, 0.1);
 }
 
 .header-content {
@@ -39,17 +38,15 @@
 .orders-header h1 {
   margin: 0;
   font-size: 1.5rem;
-  color: #333;
+  color: #722F37;
 }
 
-/* Main Content */
 .orders-main {
   max-width: 900px;
   margin: 0 auto;
   padding: 2rem;
 }
 
-/* Loading & Error States */
 .loading-container,
 .error-container,
 .empty-container {
@@ -60,11 +57,11 @@
 }
 
 .error-card {
-  background: white;
+  background: #F5ECD7;
   padding: 2rem 3rem;
   border-radius: 12px;
   text-align: center;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px rgba(92, 20, 29, 0.1);
 }
 
 .error-icon {
@@ -73,8 +70,8 @@
   justify-content: center;
   width: 50px;
   height: 50px;
-  background: #fee2e2;
-  color: #dc3545;
+  background: #f8d7da;
+  color: #721c24;
   border-radius: 50%;
   font-size: 1.5rem;
   font-weight: bold;
@@ -82,7 +79,7 @@
 }
 
 .error-card p {
-  color: #666;
+  color: #722F37;
   margin-bottom: 1.5rem;
 }
 
@@ -101,11 +98,25 @@
   background: #6d4522;
 }
 
-/* Filter Tabs */
+.retry-btn {
+  background: #722F37;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.retry-btn:hover {
+  background: #5c141d;
+}
+
 .filter-tabs {
   display: flex;
   gap: 0.5rem;
-  background: white;
+  background: #F5ECD7;
   padding: 0.5rem;
   border-radius: 12px;
   margin-bottom: 1.5rem;
@@ -120,7 +131,7 @@
   background: transparent;
   border: none;
   border-radius: 8px;
-  color: #666;
+  color: #722F37;
   font-size: 0.9rem;
   font-weight: 500;
   cursor: pointer;
@@ -129,18 +140,18 @@
 }
 
 .filter-tab:hover {
-  background: #f5f0eb;
+  background: #f6e6b2;
   color: #8b5a2b;
 }
 
 .filter-tab.active {
-  background: #8b5a2b;
+  background: #722F37;
   color: white;
 }
 
 .filter-count {
   padding: 0.15rem 0.5rem;
-  background: rgba(0, 0, 0, 0.1);
+  background: rgba(114, 47, 55, 0.1);
   border-radius: 10px;
   font-size: 0.75rem;
 }
@@ -149,23 +160,22 @@
   background: rgba(255, 255, 255, 0.2);
 }
 
-/* No Results */
 .no-results {
-  background: white;
+  background: #F5ECD7;
   padding: 3rem;
   border-radius: 12px;
   text-align: center;
 }
 
 .no-results p {
-  color: #666;
+  color: #722F37;
   margin-bottom: 1rem;
 }
 
 .reset-filter-btn {
   background: transparent;
-  border: 2px solid #8b5a2b;
-  color: #8b5a2b;
+  border: 2px solid #722F37;
+  color: #722F37;
   padding: 0.75rem 1.5rem;
   border-radius: 8px;
   font-size: 0.9rem;
@@ -174,11 +184,10 @@
 }
 
 .reset-filter-btn:hover {
-  background: #8b5a2b;
+  background: #722F37;
   color: white;
 }
 
-/* Orders List */
 .orders-list {
   display: flex;
   flex-direction: column;
@@ -186,15 +195,16 @@
 }
 
 .order-card {
-  background: white;
+  background: #F5ECD7;
   border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 2px 8px rgba(92, 20, 29, 0.1);
+  border-left: 4px solid #D4AF37;
   transition: box-shadow 0.2s;
 }
 
 .order-card:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 12px rgba(92, 20, 29, 0.15);
 }
 
 .order-header {
@@ -202,8 +212,8 @@
   justify-content: space-between;
   align-items: center;
   padding: 1rem 1.5rem;
-  background: #f9f9f9;
-  border-bottom: 1px solid #eee;
+  background: #f6e6b2;
+  border-bottom: 1px solid #D4AF37;
 }
 
 .order-info {
@@ -214,12 +224,12 @@
 
 .order-number {
   font-weight: 600;
-  color: #333;
+  color: #722F37;
 }
 
 .order-date {
   font-size: 0.85rem;
-  color: #888;
+  color: #8b5a2b;
 }
 
 .order-status {
@@ -230,23 +240,23 @@
 }
 
 .status-pending {
-  background: #fff3cd;
-  color: #856404;
+  background: #FDF8E8;
+  color: #722F37;
 }
 
 .status-confirmed {
-  background: #cce5ff;
-  color: #004085;
+  background: #FDF8E8;
+  color: #722F37;
 }
 
 .status-shipped {
-  background: #d4edda;
-  color: #155724;
+  background: #FDF8E8;
+  color: #722F37;
 }
 
 .status-delivered {
-  background: #d1e7dd;
-  color: #0f5132;
+  background: #FDF8E8;
+  color: #722F37;
 }
 
 .status-cancelled {
@@ -259,6 +269,38 @@
   justify-content: space-between;
   align-items: center;
   padding: 1.25rem 1.5rem;
+  gap: 1.5rem;
+}
+
+.order-thumbnail {
+  flex-shrink: 0;
+  width: 70px;
+  height: 70px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #f6e6b2;
+  border: 1px solid #D4AF37;
+}
+
+.thumbnail-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.thumbnail-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f6e6b2;
+}
+
+.placeholder-icon {
+  font-size: 1.75rem;
+  opacity: 0.5;
+  color: #722F37;
 }
 
 .order-details {
@@ -274,18 +316,18 @@
 
 .detail-label {
   font-size: 0.75rem;
-  color: #888;
+  color: #8b5a2b;
   text-transform: uppercase;
 }
 
 .detail-value {
   font-size: 0.95rem;
-  color: #333;
+  color: #722F37;
 }
 
 .detail-row.total .detail-value {
   font-weight: 600;
-  color: #8b5a2b;
+  color: #D4AF37;
 }
 
 .view-details-btn {
@@ -293,18 +335,18 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.75rem 1.25rem;
-  background: transparent;
-  border: 2px solid #8b5a2b;
+  background: #722F37;
+  border: none;
   border-radius: 8px;
-  color: #8b5a2b;
+  color: white;
   text-decoration: none;
   font-weight: 500;
   transition: all 0.2s;
 }
 
 .view-details-btn:hover {
-  background: #8b5a2b;
-  color: white;
+  background: #5c141d;
+  transform: translateY(-2px);
 }
 
 .arrow {
@@ -315,14 +357,12 @@
   transform: translateX(4px);
 }
 
-/* Pagination */
 .pagination-container {
   margin-top: 2rem;
   display: flex;
   justify-content: center;
 }
 
-/* Responsive */
 @media (max-width: 768px) {
   .orders-main {
     padding: 1rem;
@@ -347,6 +387,11 @@
     flex-direction: column;
     align-items: flex-start;
     gap: 1rem;
+  }
+
+  .order-thumbnail {
+    width: 60px;
+    height: 60px;
   }
 
   .order-details {

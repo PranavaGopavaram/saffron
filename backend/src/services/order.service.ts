@@ -17,9 +17,12 @@ import {
 class OrderService extends MarketplaceBaseService {
   
   private generateOrderNumber(): string {
-    const timestamp = Date.now().toString(36).toUpperCase();
-    const random = Math.random().toString(36).substring(2, 6).toUpperCase();
-    return `SAF-${timestamp}-${random}`;
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+    return `SAF-${year}${month}${day}-${random}`;
   }
 
   
@@ -52,8 +55,6 @@ class OrderService extends MarketplaceBaseService {
     
     let addressId = data.shipping_address_id;
     if (addressId) {
-      
-        
       const [addrRows] = await pool.query(
         "SELECT id FROM addresses WHERE id = ? AND user_id = ? AND type = 'shipping'",
         [addressId, userId]
@@ -62,7 +63,6 @@ class OrderService extends MarketplaceBaseService {
         throw new NotFoundError('Shipping address not found for this user');
       }
     } else {
-     
       const [addrRows] = await pool.query(
         "SELECT id FROM addresses WHERE user_id = ? AND type = 'shipping' AND is_default = TRUE LIMIT 1",
         [userId]
@@ -74,32 +74,49 @@ class OrderService extends MarketplaceBaseService {
       addressId = defaultAddr.id;
     }
     
-    let totalAmount = 0;
+    const itemsBySeller = new Map<number, any[]>();
     for (const item of cartItems) {
-      totalAmount += item.price * item.quantity;
-    }
-    totalAmount = this.roundPrice(totalAmount);
-    const orderNumber = this.generateOrderNumber();
-    
-    const orderId = await this.withTransaction(async (connection) => {
-      
-      const [orderResult] = await connection.query(
-        `INSERT INTO orders (buyer_id, order_number, total_amount, shipping_address_id, order_status, payment_status)
-         VALUES (?, ?, ?, ?, 'pending', 'pending')`,
-        [buyerId, orderNumber, totalAmount, addressId]
-      );
-      const newOrderId = (orderResult as any).insertId;
-     
-      for (const item of cartItems) {
-        const subtotal = this.roundPrice(item.price * item.quantity);
-        await connection.query(
-          `INSERT INTO order_items (order_id, variant_id, seller_id, quantity, unit_price, subtotal, item_status)
-           VALUES (?, ?, ?, ?, ?, ?, 'pending')`,
-          [newOrderId, item.variant_id, item.seller_id, item.quantity, item.price, subtotal]
-        );
+      if (!itemsBySeller.has(item.seller_id)) {
+        itemsBySeller.set(item.seller_id, []);
       }
-     
-
+      const sellerItems = itemsBySeller.get(item.seller_id);
+      if (sellerItems) {
+        sellerItems.push(item);
+      }
+    }
+    
+    const shippingCost = data.shipping_cost ? this.roundPrice(data.shipping_cost) : 0;
+    const orderIds: number[] = [];
+    
+    await this.withTransaction(async (connection) => {
+      for (const [sellerId, sellerItems] of itemsBySeller) {
+        let sellerTotal = 0;
+        for (const item of sellerItems as any[]) {
+          sellerTotal += item.price * item.quantity;
+        }
+        sellerTotal = this.roundPrice(sellerTotal);
+        
+        const sellerOrderTotal = this.roundPrice(sellerTotal + shippingCost);
+        const orderNumber = this.generateOrderNumber();
+        
+        const [orderResult] = await connection.query(
+          `INSERT INTO orders (buyer_id, order_number, total_amount, shipping_address_id, order_status, payment_status, shipping_cost)
+           VALUES (?, ?, ?, ?, 'pending', 'pending', ?)`,
+          [buyerId, orderNumber, sellerOrderTotal, addressId, shippingCost]
+        );
+        const newOrderId = (orderResult as any).insertId;
+        orderIds.push(newOrderId);
+        
+        for (const item of sellerItems as any[]) {
+          const subtotal = this.roundPrice(item.price * item.quantity);
+          await connection.query(
+            `INSERT INTO order_items (order_id, variant_id, seller_id, quantity, unit_price, subtotal, item_status)
+             VALUES (?, ?, ?, ?, ?, ?, 'pending')`,
+            [newOrderId, item.variant_id, item.seller_id, item.quantity, item.price, subtotal]
+          );
+        }
+      }
+      
       await connection.query(
         'DELETE FROM shopping_carts WHERE buyer_id = ?',
         [buyerId]
@@ -111,13 +128,12 @@ class OrderService extends MarketplaceBaseService {
           [item.quantity, item.variant_id]
         );
       }
-      return newOrderId;
     });
-   
-    return this.getOrderDetail(orderId, buyerId);
+    
+    return this.getOrderDetail(orderIds[0], buyerId);
   }
-  
-  
+   
+   
   async getOrder(userId: number, orderId: number, role: string): Promise<OrderDetail> {
     if (role === 'seller') {
      
@@ -150,9 +166,13 @@ class OrderService extends MarketplaceBaseService {
       SELECT o.id, o.order_number, o.total_amount, o.order_status, o.payment_status,
              o.created_at,
              COUNT(oi.id) AS item_count,
-             COUNT(DISTINCT oi.seller_id) AS seller_count
+             COUNT(DISTINCT oi.seller_id) AS seller_count,
+             MAX(JSON_UNQUOTE(JSON_EXTRACT(sp.images, '$[0]'))) AS first_item_image,
+             MIN(oi.id) AS first_item_id
       FROM orders o
       LEFT JOIN order_items oi ON o.id = oi.order_id
+      LEFT JOIN product_variants pv ON oi.variant_id = pv.id
+      LEFT JOIN saffron_products sp ON pv.product_id = sp.id
       WHERE o.buyer_id = ?
       GROUP BY o.id
       ORDER BY o.created_at DESC`;
@@ -305,8 +325,9 @@ class OrderService extends MarketplaceBaseService {
       `SELECT oi.id, oi.order_id, oi.variant_id, oi.seller_id, oi.quantity,
               oi.unit_price, oi.subtotal, oi.item_status,
               oi.created_at, oi.updated_at,
-              sp.product_name, pv.sku, pv.weight_grams,
-              s.business_name AS seller_name
+              sp.id AS product_id, sp.product_name, pv.sku, pv.weight_grams,
+              s.business_name AS seller_name,
+              JSON_UNQUOTE(JSON_EXTRACT(sp.images, '$[0]')) AS image
        FROM order_items oi
        JOIN product_variants pv ON oi.variant_id = pv.id
        JOIN saffron_products sp ON pv.product_id = sp.id
@@ -345,8 +366,9 @@ class OrderService extends MarketplaceBaseService {
       `SELECT oi.id, oi.order_id, oi.variant_id, oi.seller_id, oi.quantity,
               oi.unit_price, oi.subtotal, oi.item_status,
               oi.created_at, oi.updated_at,
-              sp.product_name, pv.sku, pv.weight_grams,
-              s.business_name AS seller_name
+              sp.id AS product_id, sp.product_name, pv.sku, pv.weight_grams,
+              s.business_name AS seller_name,
+              JSON_UNQUOTE(JSON_EXTRACT(sp.images, '$[0]')) AS image
        FROM order_items oi
        JOIN product_variants pv ON oi.variant_id = pv.id
        JOIN saffron_products sp ON pv.product_id = sp.id

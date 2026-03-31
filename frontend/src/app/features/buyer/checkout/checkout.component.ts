@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -14,8 +14,20 @@ import {
   CreateAddressRequest
 } from '../../../core/models/marketplace.model';
 import { LoadingSpinnerComponent, EmptyStateComponent } from '../../../shared/components';
+import { BuyerHeaderComponent } from '../shared/buyer-header/buyer-header.component';
+import { BuyerFooterComponent } from '../shared/buyer-footer/buyer-footer.component';
 
 type CheckoutStep = 'address' | 'review' | 'confirmation';
+
+interface ShippingMethod {
+  id: string;
+  name: string;
+  description: string;
+  cost: number;
+  freeThreshold: number | null;
+  estimatedDays: string;
+  icon: string;
+}
 
 @Component({
   selector: 'app-checkout',
@@ -25,7 +37,9 @@ type CheckoutStep = 'address' | 'review' | 'confirmation';
     RouterModule,
     FormsModule,
     LoadingSpinnerComponent,
-    EmptyStateComponent
+    EmptyStateComponent,
+    BuyerHeaderComponent,
+    BuyerFooterComponent
   ],
   templateUrl: './checkout.component.html',
   styleUrls: ['./checkout.component.css']
@@ -40,7 +54,14 @@ export class CheckoutComponent implements OnInit {
   error: string | null = null;
   orderConfirmation: OrderDetail | null = null;
 
-  // New address form
+  shippingMethods: ShippingMethod[] = [
+    { id: 'standard', name: 'Standard Shipping', description: 'Delivery in 5-7 business days', cost: 49, freeThreshold: 500, estimatedDays: '5-7 business days', icon: '📦' },
+    { id: 'express', name: 'Express Shipping', description: 'Delivery in 2-3 business days', cost: 99, freeThreshold: null, estimatedDays: '2-3 business days', icon: '🚚' },
+    { id: 'overnight', name: 'Overnight Delivery', description: 'Next business day delivery', cost: 199, freeThreshold: null, estimatedDays: 'Next business day', icon: '✈️' }
+  ];
+  selectedShippingMethod: ShippingMethod = this.shippingMethods[0];
+
+
   showAddressForm = false;
   newAddress: CreateAddressRequest = {
     type: 'shipping',
@@ -57,7 +78,8 @@ export class CheckoutComponent implements OnInit {
     private cartService: CartService,
     private orderService: OrderService,
     private marketplaceService: MarketplaceService,
-    private router: Router
+    private router: Router,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
@@ -68,19 +90,19 @@ export class CheckoutComponent implements OnInit {
     this.loading = true;
     this.error = null;
 
-    // Load cart and addresses in parallel
     Promise.all([
       this.loadCart(),
       this.loadAddresses()
     ]).then(() => {
       this.loading = false;
-      // Auto-select default address if available
+      this.cdr.detectChanges();
       const defaultAddress = this.addresses.find(a => a.isDefault);
       if (defaultAddress) {
         this.selectedAddressId = defaultAddress.id;
       }
     }).catch(() => {
       this.loading = false;
+      this.cdr.detectChanges();
     });
   }
 
@@ -116,7 +138,7 @@ export class CheckoutComponent implements OnInit {
         },
         error: (err) => {
           console.error('Error loading addresses:', err);
-          resolve(); // Don't fail the whole checkout if addresses fail
+          resolve(); 
         }
       });
     });
@@ -214,11 +236,11 @@ export class CheckoutComponent implements OnInit {
     this.submitting = true;
     this.error = null;
 
-    this.orderService.createOrder(this.selectedAddressId).subscribe({
+    const shippingCost = this.getShippingCost();
+    this.orderService.createOrder(this.selectedAddressId, shippingCost).subscribe({
       next: (response: ApiResponse<OrderDetail>) => {
         if (response.success && response.data) {
-          this.orderConfirmation = response.data;
-          this.currentStep = 'confirmation';
+          this.router.navigate(['/buyer/orders']);
         }
         this.submitting = false;
       },
@@ -246,16 +268,57 @@ export class CheckoutComponent implements OnInit {
   }
 
   formatPrice(price: number): string {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat('en-IN', {
       style: 'currency',
-      currency: 'USD'
+      currency: 'INR'
     }).format(price);
   }
 
   getShippingCost(): number {
-    if (!this.cart) return 0;
-    // Free shipping over $100
-    return this.cart.totalPrice >= 100 ? 0 : 9.99;
+    if (!this.cart || !this.selectedShippingMethod) return 0;
+    if (this.selectedShippingMethod.freeThreshold && this.cart.totalPrice >= this.selectedShippingMethod.freeThreshold) {
+      return 0;
+    }
+    return this.selectedShippingMethod.cost;
+  }
+
+  getMethodCost(method: ShippingMethod): number {
+    if (!this.cart || !method.freeThreshold) return method.cost;
+    if (this.cart.totalPrice >= method.freeThreshold) return 0;
+    return method.cost;
+  }
+
+  selectShippingMethod(method: ShippingMethod): void {
+    this.selectedShippingMethod = method;
+  }
+
+  getEstimatedDeliveryDate(): string {
+    if (!this.selectedShippingMethod) return '';
+    const today = new Date();
+    const daysMatch = this.selectedShippingMethod.estimatedDays.match(/(\d+)-(\d+)/);
+    if (daysMatch) {
+      const maxDays = parseInt(daysMatch[2], 10);
+      const deliveryDate = new Date(today);
+      deliveryDate.setDate(today.getDate() + maxDays);
+      return deliveryDate.toLocaleDateString('en-IN', { weekday: 'long', month: 'short', day: 'numeric' });
+    }
+    if (this.selectedShippingMethod.estimatedDays.includes('Next')) {
+      const tomorrow = new Date(today);
+      tomorrow.setDate(today.getDate() + 1);
+      return tomorrow.toLocaleDateString('en-IN', { weekday: 'long', month: 'short', day: 'numeric' });
+    }
+    return this.selectedShippingMethod.estimatedDays;
+  }
+
+  getFreeShippingRemaining(): number {
+    if (!this.selectedShippingMethod?.freeThreshold || !this.cart) return 0;
+    const remaining = this.selectedShippingMethod.freeThreshold - this.cart.totalPrice;
+    return remaining > 0 ? remaining : 0;
+  }
+
+  showFreeShippingInfo(): boolean {
+    if (!this.selectedShippingMethod?.freeThreshold || !this.cart) return false;
+    return this.cart.totalPrice < this.selectedShippingMethod.freeThreshold;
   }
 
   getTotalWithShipping(): number {

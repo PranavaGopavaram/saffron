@@ -1,19 +1,25 @@
 <header class="buyer-header">
-  <div class="header-brand">
-    <h1>Saffron Marketplace</h1>
-    <span class="welcome-text" *ngIf="user()">Welcome, {{ user()?.fullName }}</span>
+  <div class="header-left">
+    <a routerLink="/buyer/home" class="header-brand">
+      <span class="brand-icon">࣪˖ ִֶཐི༏ཋྀ</span>
+      <h1>Saffron Marketplace</h1>
+    </a>
   </div>
   
   <nav class="header-nav">
-    <a routerLink="/buyer/home" routerLinkActive="active" class="nav-link">Home</a>
-    <a routerLink="/buyer/products" routerLinkActive="active" class="nav-link">Browse</a>
-    <a routerLink="/buyer/cart" routerLinkActive="active" class="nav-link">
+    <a routerLink="/buyer/home" routerLinkActive="active">Home</a>
+    <a routerLink="/buyer/products" routerLinkActive="active">Browse</a>
+    <a routerLink="/buyer/cart" routerLinkActive="active" class="cart-link">
       Cart
       <span class="cart-badge" *ngIf="cartItemCount() > 0">{{ cartItemCount() }}</span>
     </a>
-    <a routerLink="/buyer/orders" routerLinkActive="active" class="nav-link">Orders</a>
-    <a routerLink="/buyer/dashboard" routerLinkActive="active" class="nav-link">Dashboard</a>
+    <a routerLink="/buyer/orders" routerLinkActive="active">Orders</a>
+    <a routerLink="/buyer/dashboard" routerLinkActive="active">Dashboard</a>
   </nav>
   
-  <button class="logout-btn" (click)="onLogout()">Logout</button>
+  <div class="header-right">
+    <span class="welcome-text" *ngIf="user()">Welcome, {{ user()?.fullName }}</span>
+    <button class="logout-btn" (click)="onLogout()">Logout</button>
+    <a routerLink="/buyer/profile" class="user-avatar" title="View Profile">{{ user()?.fullName?.charAt(0) || 'U' }}</a>
+  </div>
 </header>

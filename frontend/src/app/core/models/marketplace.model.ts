@@ -166,10 +166,12 @@ export interface OrderItem {
 }
 
 export interface OrderItemDetail extends OrderItem {
+  productId: number;
   productName: string;
   sku: string;
   weightGrams: number;
   sellerName: string;
+  image: string | null;
 }
 
 export interface OrderDetail {
@@ -197,11 +199,14 @@ export interface OrderSummary {
   paymentStatus: PaymentStatus;
   itemCount: number;
   sellerCount: number;
+  firstItemImage: string | null;
+  firstItemId: number | null;
   createdAt: Date;
 }
 
 export interface CreateOrderRequest {
   shipping_address_id?: number;
+  shipping_cost?: number;
 }
 
 export interface UpdateItemStatusRequest {
