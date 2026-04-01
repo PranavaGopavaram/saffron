@@ -49,6 +49,9 @@ export class OrderDetailComponent implements OnInit {
       next: (response: ApiResponse<OrderDetail>) => {
         if (response.success && response.data) {
           this.orderDetail = response.data;
+          console.log('Order loaded:', this.orderDetail);
+          console.log('Order status:', this.orderDetail.order.orderStatus);
+          console.log('canCancel():', this.canCancel());
         }
         this.loading = false;
       },
@@ -99,15 +102,8 @@ export class OrderDetailComponent implements OnInit {
 
   canCancel(): boolean {
     if (!this.orderDetail) return false;
-    const status = this.orderDetail.order.orderStatus;
-    // Allow cancellation for pending or confirmed orders
-    const cancellableStatuses = [
-      OrderStatus.PENDING,
-      OrderStatus.CONFIRMED,
-      'pending',
-      'confirmed'
-    ];
-    return cancellableStatuses.includes(status as any);
+    const status = String(this.orderDetail.order.orderStatus).toLowerCase();
+    return status === 'pending' || status === 'confirmed';
   }
 
   getStatusClass(status: OrderStatus | string): string {

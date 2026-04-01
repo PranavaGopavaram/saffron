@@ -139,7 +139,7 @@
           <div class="actions-card">
             <button 
               class="cancel-btn" 
-              *ngIf="canCancel()"
+              *ngIf="orderDetail?.order?.orderStatus === 'pending' || orderDetail?.order?.orderStatus === 'confirmed'"
               (click)="cancelOrder()"
               [disabled]="cancelling">
               {{ cancelling ? 'Cancelling...' : 'Cancel Order' }}

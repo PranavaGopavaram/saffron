@@ -43,6 +43,7 @@
         </div>
       </div>
 
+
       <div class="product-section">
         <div class="product-image-container">
           <img [src]="getProductImage()" [alt]="orderItem.productName" class="product-image">
@@ -92,6 +93,9 @@
             <div class="spec-item" *ngIf="product.product.moistureLevel">
               <span class="spec-label">Moisture Level</span>
               <span class="spec-value">{{ product.product.moistureLevel }}%</span>
+            </div>
+            <div class="cancelled" *ngIf="orderItem.cancelled">
+              <span class="cancelled-label">This item was cancelled</span>
             </div>
           </div>
         </div>
