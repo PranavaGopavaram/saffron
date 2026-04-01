@@ -100,7 +100,14 @@ export class OrderDetailComponent implements OnInit {
   canCancel(): boolean {
     if (!this.orderDetail) return false;
     const status = this.orderDetail.order.orderStatus;
-    return status === OrderStatus.PENDING || (status as string) === 'pending';
+    // Allow cancellation for pending or confirmed orders
+    const cancellableStatuses = [
+      OrderStatus.PENDING,
+      OrderStatus.CONFIRMED,
+      'pending',
+      'confirmed'
+    ];
+    return cancellableStatuses.includes(status as any);
   }
 
   getStatusClass(status: OrderStatus | string): string {

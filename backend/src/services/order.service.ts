@@ -222,9 +222,10 @@ class OrderService extends MarketplaceBaseService {
     if (!order) {
       throw new NotFoundError('Order not found');
     }
-    if (order.order_status !== 'pending') {
+    const cancellableStatuses = ['pending', 'confirmed'];
+    if (!cancellableStatuses.includes(order.order_status)) {
       throw new ForbiddenError(
-        `Cannot cancel order with status '${order.order_status}'. Only pending orders can be cancelled.`
+        `Cannot cancel order with status '${order.order_status}'. Only pending or confirmed orders can be cancelled.`
       );
     }
    
