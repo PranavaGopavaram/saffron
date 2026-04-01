@@ -47,33 +47,25 @@
           <section class="section items-section">
             <h2>Order Items</h2>
             
-            <div class="seller-group" *ngFor="let entry of getItemsBySeller() | keyvalue">
-              <div class="seller-header">
-                <span class="seller-name">{{ entry.value.sellerName }}</span>
+            <div class="item-row" 
+               *ngFor="let item of orderDetail.items"
+               (click)="viewItemDetail(item)">
+              <div class="item-image">
+                <img *ngIf="item.image" [src]="item.image" [alt]="item.productName" class="product-image">
+                <div *ngIf="!item.image" class="image-placeholder">S</div>
               </div>
-              
-              <div class="item-row" 
-                 *ngFor="let item of entry.value.items"
-                 (click)="viewItemDetail(item)">
-                <div class="item-image">
-                  <img *ngIf="item.image" [src]="item.image" [alt]="item.productName" class="product-image">
-                  <div *ngIf="!item.image" class="image-placeholder">Saffron</div>
+              <div class="item-details">
+                <h4 class="item-name">{{ item.productName }}</h4>
+                <p class="item-meta">
+                  <span class="item-weight">{{ item.weightGrams }}g</span>
+                </p>
+                <div class="item-status" [class]="getStatusClass(item.itemStatus)">
+                  {{ getStatusLabel(item.itemStatus) }}
                 </div>
-                <div class="item-details">
-                  <h4 class="item-name">{{ item.productName }}</h4>
-                  <p class="item-meta">
-                    <span class="item-weight">{{ item.weightGrams }}g</span>
-                    <span class="item-sku">SKU: {{ item.sku }}</span>
-                  </p>
-                  <div class="item-status" [class]="getStatusClass(item.itemStatus)">
-                    {{ getStatusLabel(item.itemStatus) }}
-                  </div>
-                </div>
-                <div class="item-pricing">
-                  <span class="item-quantity">Qty: {{ item.quantity }}</span>
-                  <span class="item-unit-price">{{ formatPrice(item.unitPrice) }} each</span>
-                  <span class="item-subtotal">{{ formatPrice(item.subtotal) }}</span>
-                </div>
+              </div>
+              <div class="item-pricing">
+                <span class="item-quantity">Qty: {{ item.quantity }}</span>
+                <span class="item-subtotal">{{ formatPrice(item.subtotal) }}</span>
               </div>
             </div>
           </section>
@@ -110,6 +102,14 @@
               <span>Total</span>
               <span>{{ formatPrice(orderDetail.order.totalAmount) }}</span>
             </div>
+            
+            <button 
+              class="cancel-btn-main" 
+              *ngIf="orderDetail?.order?.orderStatus === 'pending' || orderDetail?.order?.orderStatus === 'confirmed'"
+              (click)="cancelOrder()"
+              [disabled]="cancelling">
+              {{ cancelling ? 'Cancelling...' : 'Cancel Order' }}
+            </button>
           </div>
 
           <div class="info-card">
@@ -137,14 +137,6 @@
           </div>
 
           <div class="actions-card">
-            <button 
-              class="cancel-btn" 
-              *ngIf="orderDetail?.order?.orderStatus === 'pending' || orderDetail?.order?.orderStatus === 'confirmed'"
-              (click)="cancelOrder()"
-              [disabled]="cancelling">
-              {{ cancelling ? 'Cancelling...' : 'Cancel Order' }}
-            </button>
-            
             <a routerLink="/buyer/products" class="continue-btn">
               Continue Shopping
             </a>

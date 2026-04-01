@@ -224,9 +224,9 @@
 }
 
 .item-image {
-  width: 80px;
-  height: 80px;
-  border-radius: 8px;
+  width: 50px;
+  height: 50px;
+  border-radius: 6px;
   overflow: hidden;
   background: #f6e6b2;
   flex-shrink: 0;
@@ -431,6 +431,29 @@ color: #8b5a2b;
 }
 
 .cancel-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.cancel-btn-main {
+  width: 100%;
+  padding: 1rem;
+  background: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  margin-top: 1rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.cancel-btn-main:hover:not(:disabled) {
+  background: #c82333;
+}
+
+.cancel-btn-main:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
