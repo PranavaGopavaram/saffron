@@ -49,9 +49,6 @@ export class OrderDetailComponent implements OnInit {
       next: (response: ApiResponse<OrderDetail>) => {
         if (response.success && response.data) {
           this.orderDetail = response.data;
-          console.log('Order loaded:', this.orderDetail);
-          console.log('Order status:', this.orderDetail.order.orderStatus);
-          console.log('canCancel():', this.canCancel());
         }
         this.loading = false;
       },
