@@ -73,8 +73,8 @@
             <span class="spending-label">Total Spent</span>
           </div>
           <div class="spending-card">
-            <span class="spending-value">{{ formatPrice(spending().thisMonth) }}</span>
-            <span class="spending-label">This Month</span>
+            <span class="spending-value">{{ formatPrice(spending().last30Days) }}</span>
+            <span class="spending-label">Last 30 Days</span>
           </div>
           <div class="spending-card">
             <span class="spending-value">{{ formatPrice(spending().avgOrder) }}</span>

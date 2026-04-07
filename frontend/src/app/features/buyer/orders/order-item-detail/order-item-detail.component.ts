@@ -3,17 +3,8 @@ import { CommonModule } from '@angular/common';
 import { RouterModule, ActivatedRoute, Router } from '@angular/router';
 import { Location } from '@angular/common';
 import { OrderService } from '../../../../core/services/order.service';
-import { ProductService } from '../../../../core/services/product.service';
-import { 
-  OrderDetail, 
-  OrderItemDetail, 
-  ProductResponse, 
-  ProductGrade,
-  OrderStatus,
-  ApiResponse 
-} from '../../../../core/models/marketplace.model';
+import { OrderDetail, OrderItemDetail, OrderStatus, ApiResponse } from '../../../../core/models/marketplace.model';
 import { LoadingSpinnerComponent } from '../../../../shared/components';
-import { StarRatingComponent } from '../../../../shared/components/star-rating/star-rating.component';
 import { BuyerHeaderComponent } from '../../shared/buyer-header/buyer-header.component';
 import { BuyerFooterComponent } from '../../shared/buyer-footer/buyer-footer.component';
 
@@ -24,8 +15,7 @@ import { BuyerFooterComponent } from '../../shared/buyer-footer/buyer-footer.com
     CommonModule, 
     RouterModule, 
     LoadingSpinnerComponent,
-    StarRatingComponent,
-    BuyerHeaderComponent, 
+    BuyerHeaderComponent,
     BuyerFooterComponent
   ],
   templateUrl: './order-item-detail.component.html',
@@ -34,7 +24,6 @@ import { BuyerFooterComponent } from '../../shared/buyer-footer/buyer-footer.com
 export class OrderItemDetailComponent implements OnInit {
   orderDetail: OrderDetail | null = null;
   orderItem: OrderItemDetail | null = null;
-  product: ProductResponse | null = null;
   
   orderId: number = 0;
   itemId: number = 0;
@@ -42,9 +31,12 @@ export class OrderItemDetailComponent implements OnInit {
   loading = true;
   error: string | null = null;
 
+  showCancelModal = false;
+  cancelling = false;
+  cancelError: string | null = null;
+
   constructor(
     private orderService: OrderService,
-    private productService: ProductService,
     private route: ActivatedRoute,
     private router: Router,
     private cdr: ChangeDetectorRef,
@@ -78,21 +70,8 @@ export class OrderItemDetailComponent implements OnInit {
             this.cdr.detectChanges();
             return;
           }
-
-          this.productService.getProductById(this.orderItem.productId).subscribe({
-            next: (productResponse) => {
-              if (productResponse.success && productResponse.data) {
-                this.product = productResponse.data;
-              }
-              this.loading = false;
-              this.cdr.detectChanges();
-            },
-            error: (err) => {
-              console.error('Error loading product:', err);
-              this.loading = false;
-              this.cdr.detectChanges();
-            }
-          });
+          this.loading = false;
+          this.cdr.detectChanges();
         } else {
           this.error = 'Failed to load order details';
           this.loading = false;
@@ -104,6 +83,44 @@ export class OrderItemDetailComponent implements OnInit {
         this.loading = false;
         this.cdr.detectChanges();
         console.error('Error loading order:', err);
+      }
+    });
+  }
+
+  openCancelModal(): void {
+    this.showCancelModal = true;
+    this.cancelError = null;
+  }
+
+  closeCancelModal(): void {
+    if (!this.cancelling) {
+      this.showCancelModal = false;
+      this.cancelError = null;
+    }
+  }
+
+  confirmCancel(): void {
+    if (!this.orderItem || this.cancelling) return;
+    
+    this.cancelling = true;
+    this.cancelError = null;
+
+    this.orderService.cancelItem(this.orderId, this.itemId).subscribe({
+      next: (response: ApiResponse<OrderItemDetail>) => {
+        if (response.success) {
+          this.showCancelModal = false;
+          this.loadData();
+        } else {
+          this.cancelError = response.message || 'Failed to cancel item';
+        }
+        this.cancelling = false;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        this.cancelError = 'Failed to cancel item. Please try again.';
+        this.cancelling = false;
+        this.cdr.detectChanges();
+        console.error('Error cancelling item:', err);
       }
     });
   }
@@ -126,6 +143,7 @@ export class OrderItemDetailComponent implements OnInit {
     }
   }
 
+
   getStatusLabel(status: OrderStatus | string): string {
     const statusStr = status?.toString().toLowerCase();
     switch (statusStr) {
@@ -144,21 +162,7 @@ export class OrderItemDetailComponent implements OnInit {
     }
   }
 
-  get gradeLabel(): string {
-    if (!this.product) return '';
-    const labels: Record<ProductGrade, string> = {
-      [ProductGrade.PREMIUM]: 'Premium',
-      [ProductGrade.FIRST]: 'Grade I',
-      [ProductGrade.SECOND]: 'Grade II',
-      [ProductGrade.THIRD]: 'Grade III'
-    };
-    return labels[this.product.product.grade] || this.product.product.grade;
-  }
-
   getProductImage(): string {
-    if (this.product?.product.images?.length) {
-      return this.product.product.images[0];
-    }
     if (this.orderItem?.image) {
       return this.orderItem.image;
     }
@@ -172,25 +176,18 @@ export class OrderItemDetailComponent implements OnInit {
     }).format(price);
   }
 
-  formatDate(date: Date | string): string {
-    if (!date) return '';
+  formatShortDate(date: Date | string | undefined): string {
+    if (!date) return 'TBD';
     return new Date(date).toLocaleDateString('en-US', {
       year: 'numeric',
-      month: 'long',
+      month: 'short',
       day: 'numeric'
     });
   }
 
-  isDelivered(): boolean {
+  canCancel(): boolean {
     const status = this.orderItem?.itemStatus?.toString().toLowerCase();
-    return status === 'delivered';
-  }
-
-  getDeliveredDate(): string {
-    if (this.isDelivered() && this.orderItem?.updatedAt) {
-      return this.formatDate(this.orderItem.updatedAt);
-    }
-    return '';
+    return status === 'pending' || status === 'confirmed';
   }
 
   goBack(): void {

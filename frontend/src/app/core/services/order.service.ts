@@ -5,6 +5,7 @@ import { tap, catchError, map } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { 
   OrderDetail,
+  OrderItemDetail,
   OrderSummary,
   OrderItem,
   CreateOrderRequest,
@@ -39,7 +40,6 @@ export class OrderService {
       createdAt: order.created_at
     };
   }
-
   constructor(private http: HttpClient) {}
 
   createOrder(shippingAddressId?: number, shippingCost?: number): Observable<ApiResponse<OrderDetail>> {
@@ -68,7 +68,6 @@ export class OrderService {
     ).pipe(
       map(response => {
         if (response.success && response.data) {
-          // Backend returns: { data: [...], total, page, limit }
           let ordersArray: any[] = [];
           
           if (Array.isArray(response.data.data)) {
@@ -187,6 +186,21 @@ export class OrderService {
       }),
       catchError(error => {
         console.error(`Error cancelling order ${orderId}:`, error);
+        return throwError(() => error);
+      })
+    );
+  }
+
+  cancelItem(orderId: number, itemId: number): Observable<ApiResponse<OrderItemDetail>> {
+    return this.http.patch<ApiResponse<OrderItemDetail>>(
+      `${this.apiUrl}/${orderId}/items/${itemId}/cancel`,
+      {}
+    ).pipe(
+      tap(response => {
+        console.log('Item cancelled:', response.message);
+      }),
+      catchError(error => {
+        console.error(`Error cancelling item ${itemId}:`, error);
         return throwError(() => error);
       })
     );

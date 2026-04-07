@@ -24,21 +24,18 @@ export class AuthService {
     private storageService: StorageService
   ) {}
   
-  /**
-   * Register a new buyer
-   */
   registerBuyer(data: BuyerRegistrationRequest): Observable<ApiResponse<AuthResponse>> {
-    // Convert camelCase to snake_case for backend
     const payload = {
       ...data,
       shippingAddress: {
         street: data.shippingAddress.street,
         city: data.shippingAddress.city,
         state: data.shippingAddress.state,
-        zip_code: data.shippingAddress.zipCode,  // Convert to snake_case
+        zip_code: data.shippingAddress.zipCode, 
         country: data.shippingAddress.country
       }
     };
+
 
     return this.http.post<ApiResponse<AuthResponse>>(
       `${environment.apiUrl}/auth/register`,
@@ -57,16 +54,13 @@ export class AuthService {
     );
   }
 
-  /**
-   * Register a new seller (with optional file uploads)
-   */
+
   registerSeller(
     data: SellerRegistrationRequest,
     files?: File[]
   ): Observable<ApiResponse<AuthResponse>> {
     const formData = new FormData();
-    
-    // Add text fields
+
     formData.append('fullName', data.fullName);
     formData.append('email', data.email);
     formData.append('password', data.password);
@@ -77,7 +71,6 @@ export class AuthService {
     formData.append('taxId', data.taxId);
     formData.append('saffronSource', data.saffronSource);
     
-    // Add nested address fields (backend expects snake_case)
     formData.append('businessAddress[street]', data.businessAddress.street);
     formData.append('businessAddress[city]', data.businessAddress.city);
     formData.append('businessAddress[state]', data.businessAddress.state);
@@ -106,9 +99,7 @@ export class AuthService {
     );
   }
 
-  /**
-   * Login user
-   */
+
   login(credentials: LoginRequest): Observable<ApiResponse<AuthResponse>> {
     return this.http.post<ApiResponse<AuthResponse>>(
       `${environment.apiUrl}/auth/login`,
@@ -127,18 +118,11 @@ export class AuthService {
     );
   }
 
-  /**
-   * Logout user
-   */
   logout(): void {
     console.log('User logged out');
     this.storageService.clearAll();
   }
   
-  /**
-   * Check if user is authenticated
-   * Checks if token exists and is valid (not expired)
-   */
   isAuthenticated(): boolean {
     const token = this.storageService.getToken();
     if (!token) {
@@ -162,9 +146,6 @@ export class AuthService {
     }
   }
   
-  /**
-   * Decode JWT token to extract payload
-   */
   private decodeToken(token: string): JWTPayload {
     try {
       const parts = token.split('.');
@@ -178,9 +159,7 @@ export class AuthService {
     }
   }
   
-  /**
-   * Get current user from storage
-   */
+
   getCurrentUser(): User | null {
     return this.storageService.getUser();
   }

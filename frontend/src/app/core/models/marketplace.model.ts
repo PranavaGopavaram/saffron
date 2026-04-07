@@ -166,6 +166,7 @@ export interface OrderItem {
 }
 
 export interface OrderItemDetail extends OrderItem {
+cancelled: any;
   productId: number;
   productName: string;
   sku: string;

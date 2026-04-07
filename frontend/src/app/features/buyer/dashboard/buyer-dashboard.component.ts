@@ -19,7 +19,7 @@ interface OrderStats {
 
 interface SpendingSummary {
   totalSpent: number;
-  thisMonth: number;
+  last30Days: number;
   avgOrder: number;
 }
 
@@ -39,7 +39,7 @@ export class BuyerDashboardComponent implements OnInit {
   buyerProfile = signal<BuyerProfile | null>(null);
   orderStats = signal<OrderStats>({ total: 0, pending: 0, confirmed: 0, shipped: 0, delivered: 0 });
   recentOrders = signal<OrderSummary[]>([]);
-  spending = signal<SpendingSummary>({ totalSpent: 0, thisMonth: 0, avgOrder: 0 });
+  spending = signal<SpendingSummary>({ totalSpent: 0, last30Days: 0, avgOrder: 0 });
   loading = signal(true);
 
   ngOnInit(): void {
@@ -66,7 +66,7 @@ export class BuyerDashboardComponent implements OnInit {
           // Use backend-calculated spending stats
           this.spending.set({
             totalSpent: bp.totalSpent || 0,
-            thisMonth: this.calculateThisMonthSpending(results.orders),
+            last30Days: this.calculateThisMonthSpending(results.orders),
             avgOrder: bp.averageOrderValue || 0
           });
         }
@@ -97,10 +97,10 @@ export class BuyerDashboardComponent implements OnInit {
           // If buyer profile didn't have spending data, calculate from orders
           if (!this.buyerProfile()?.totalSpent) {
             const totalSpent = orders.reduce((sum: number, o: OrderSummary) => sum + Number(o.totalAmount), 0);
-            const thisMonth = this.calculateThisMonthFromOrders(orders);
+            const last30Days = this.calculateThisMonthFromOrders(orders);
             this.spending.set({
               totalSpent,
-              thisMonth,
+              last30Days,
               avgOrder: orders.length > 0 ? totalSpent / orders.length : 0
             });
           }
@@ -119,7 +119,18 @@ export class BuyerDashboardComponent implements OnInit {
     if (!ordersResponse.success || !ordersResponse.data?.data) {
       return 0;
     }
-    return this.calculateThisMonthFromOrders(ordersResponse.data.data);
+    return this.calculateLast30DaysFromOrders(ordersResponse.data.data);
+  }
+
+  private calculateLast30DaysFromOrders(orders: OrderSummary[]): number {
+    const now = new Date();
+    const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    
+    const last30DaysOrders = orders.filter((o: OrderSummary) => {
+      const d = new Date(o.createdAt);
+      return d >= thirtyDaysAgo && d <= now;
+    });
+    return last30DaysOrders.reduce((sum: number, o: OrderSummary) => sum + Number(o.totalAmount), 0);
   }
 
   private calculateThisMonthFromOrders(orders: OrderSummary[]): number {

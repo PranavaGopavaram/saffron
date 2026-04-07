@@ -3,10 +3,11 @@
 <div class="order-item-container">
   <header class="page-header">
     <div class="header-content">
-      <button class="back-btn" (click)="goBack()">
+      <a routerLink="/buyer/orders" class="back-link">
         <span class="back-icon">&larr;</span>
-        Back to Order #{{ orderDetail?.order?.orderNumber }}
-      </button>
+        My Orders
+      </a>
+      <h1 *ngIf="orderDetail">Order #{{ orderDetail.order.orderNumber }}</h1>
     </div>
   </header>
 
@@ -24,107 +25,45 @@
     </div>
 
     <div class="content" *ngIf="!loading && !error && orderItem">
-      <div class="status-banner" [class]="getStatusClass(orderItem.itemStatus)">
+      <div class="status-row">
         <div class="status-info">
           <span class="status-label">Item Status</span>
-          <span class="status-value">{{ getStatusLabel(orderItem.itemStatus) }}</span>
+          <span class="status-badge" [class]="getStatusClass(orderItem.itemStatus)">
+            {{ getStatusLabel(orderItem.itemStatus) }}
+          </span>
         </div>
-        <div class="status-info" *ngIf="orderDetail?.order?.createdAt">
-          <span class="status-label">Ordered On</span>
-          <span class="status-value">{{ formatDate(orderDetail!.order!.createdAt) }}</span>
+        <div class="status-info" *ngIf="orderDetail?.order?.deliveryDateEstimated && orderItem.itemStatus !== 'delivered' && orderItem.itemStatus !== 'cancelled'">
+          <span class="status-label">Estimated Arrival</span>
+          <span class="status-value">{{ formatShortDate(orderDetail!.order!.deliveryDateEstimated) }}</span>
         </div>
-        <div class="status-info" *ngIf="isDelivered()">
+        <div class="status-info" *ngIf="orderItem.itemStatus === 'delivered' && orderItem.updatedAt">
           <span class="status-label">Delivered On</span>
-          <span class="status-value delivered-date">{{ getDeliveredDate() }}</span>
+          <span class="status-value delivered-date">{{ formatShortDate(orderItem.updatedAt) }}</span>
         </div>
-        <div class="status-info" *ngIf="!isDelivered() && orderDetail?.order?.deliveryDateEstimated">
-          <span class="status-label">Estimated Delivery</span>
-          <span class="status-value">{{ formatDate(orderDetail!.order!.deliveryDateEstimated!) }}</span>
-        </div>
-      </div>
-
-
-      <div class="product-section">
-        <div class="product-image-container">
-          <img [src]="getProductImage()" [alt]="orderItem.productName" class="product-image">
-        </div>
-
-        <div class="product-info">
-          <h1 class="product-name">{{ product?.product?.productName || orderItem.productName }}</h1>
-          
-          <div class="seller-info" *ngIf="product?.sellerInfo">
-            <span class="seller-label">Sold by</span>
-            <span class="seller-name">{{ product!.sellerInfo!.businessName }}</span>
-            <app-star-rating [rating]="product!.sellerInfo!.averageRating" [readonly]="true"></app-star-rating>
-          </div>
-          <div class="seller-info" *ngIf="!product?.sellerInfo">
-            <span class="seller-label">Sold by</span>
-            <span class="seller-name">{{ orderItem.sellerName }}</span>
-          </div>
-
-          <div class="product-meta" *ngIf="product">
-            <div class="meta-item">
-              <span class="meta-label">Origin</span>
-              <span class="meta-value">{{ product.product.origin }}</span>
-            </div>
-            <div class="meta-item">
-              <span class="meta-label">Grade</span>
-              <span class="meta-value grade-badge" [attr.data-grade]="product.product.grade">{{ gradeLabel }}</span>
-            </div>
-            <div class="meta-item" *ngIf="product.product.isoCertification">
-              <span class="meta-value cert-badge">ISO Certified</span>
-            </div>
-          </div>
-
-          <div class="product-description" *ngIf="product?.product?.description">
-            <h3>Description</h3>
-            <p>{{ product!.product!.description }}</p>
-          </div>
-
-          <div class="product-specs" *ngIf="product">
-            <div class="spec-item">
-              <span class="spec-label">Color Rating</span>
-              <span class="spec-value">{{ product.product.colorRating }}/10</span>
-            </div>
-            <div class="spec-item">
-              <span class="spec-label">Aroma Score</span>
-              <span class="spec-value">{{ product.product.aromaScore }}/10</span>
-            </div>
-            <div class="spec-item" *ngIf="product.product.moistureLevel">
-              <span class="spec-label">Moisture Level</span>
-              <span class="spec-value">{{ product.product.moistureLevel }}%</span>
-            </div>
-            <div class="cancelled" *ngIf="orderItem.cancelled">
-              <span class="cancelled-label">This item was cancelled</span>
-            </div>
-          </div>
+        <div class="status-info total-info">
+          <span class="status-label">Total</span>
+          <span class="total-amount">{{ formatPrice(orderItem.subtotal) }}</span>
         </div>
       </div>
-
-      <div class="purchase-section">
-        <h2>Your Purchase</h2>
-        <div class="purchase-details">
-          <div class="purchase-row">
-            <span class="purchase-label">Variant</span>
-            <span class="purchase-value">{{ orderItem.weightGrams }}g</span>
+       
+      <div class="item-section">
+        <h2>Item</h2>
+        <div class="item-row">
+          <div class="item-image">
+            <img [src]="getProductImage()" [alt]="orderItem.productName">
           </div>
-          <div class="purchase-row">
-            <span class="purchase-label">SKU</span>
-            <span class="purchase-value">{{ orderItem.sku }}</span>
+          <div class="item-info">
+            <span class="item-name">{{ orderItem.productName }}</span>
+            <span class="item-variant">{{ orderItem.weightGrams }}g</span>
           </div>
-          <div class="purchase-row">
-            <span class="purchase-label">Quantity</span>
-            <span class="purchase-value">{{ orderItem.quantity }}</span>
-          </div>
-          <div class="purchase-row">
-            <span class="purchase-label">Unit Price</span>
-            <span class="purchase-value">{{ formatPrice(orderItem.unitPrice) }}</span>
-          </div>
-          <div class="purchase-divider"></div>
-          <div class="purchase-row total">
-            <span class="purchase-label">Subtotal</span>
-            <span class="purchase-value">{{ formatPrice(orderItem.subtotal) }}</span>
-          </div>
+          <div class="item-quantity">Qty: {{ orderItem.quantity }}</div>
+          <div class="item-price">{{ formatPrice(orderItem.subtotal) }}</div>
+          <button 
+            class="cancel-btn" 
+            (click)="openCancelModal()"
+            [disabled]="!canCancel() || cancelling">
+            {{ cancelling ? 'Cancelling...' : 'Cancel Item' }}
+          </button>
         </div>
       </div>
     </div>
@@ -132,3 +71,28 @@
 </div>
 
 <app-buyer-footer></app-buyer-footer>
+
+<div class="cancel-modal" *ngIf="showCancelModal">
+  <div class="modal-overlay" (click)="closeCancelModal()"></div>
+  <div class="modal-content">
+    <div class="modal-icon">!</div>
+    <h3>Cancel Item?</h3>
+    <p class="modal-message">Are you sure you want to cancel <strong>{{ orderItem?.productName }}</strong>? This action cannot be undone.</p>
+    <p *ngIf="cancelError" class="error-msg">{{ cancelError }}</p>
+    <div class="modal-actions">
+      <button 
+        class="btn-confirm-cancel" 
+        (click)="confirmCancel()" 
+        [disabled]="cancelling">
+        {{ cancelling ? 'Cancelling...' : 'Yes, Cancel' }}
+      </button>
+      <button 
+        class="btn-keep" 
+        (click)="closeCancelModal()"
+        [disabled]="cancelling">
+        Keep Item
+      </button>
+    </div>
+  </div>
+  
+</div>

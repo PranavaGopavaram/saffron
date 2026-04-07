@@ -257,7 +257,83 @@ class OrderService extends MarketplaceBaseService {
     return (updatedRows as any[])[0] as Order;
   }
 
-  
+  async cancelItem(userId: number, orderId: number, itemId: number): Promise<OrderItemDetail> {
+    const buyerId = await this.getBuyerIdFromUserId(userId);
+
+    const [orderRows] = await pool.query(
+      'SELECT * FROM orders WHERE id = ? AND buyer_id = ?',
+      [orderId, buyerId]
+    );
+    const order = (orderRows as any[])[0];
+    if (!order) {
+      throw new NotFoundError('Order not found');
+    }
+
+    const [itemRows] = await pool.query(
+      'SELECT * FROM order_items WHERE id = ? AND order_id = ?',
+      [itemId, orderId]
+    );
+    const orderItem = (itemRows as any[])[0];
+    if (!orderItem) {
+      throw new NotFoundError('Order item not found');
+    }
+
+    const cancellableStatuses = ['pending', 'confirmed'];
+    if (!cancellableStatuses.includes(orderItem.item_status)) {
+      throw new ForbiddenError(
+        `Cannot cancel item with status '${orderItem.item_status}'. Only pending or confirmed items can be cancelled.`
+      );
+    }
+
+    await this.withTransaction(async (connection) => {
+      await connection.query(
+        "UPDATE order_items SET item_status = 'cancelled' WHERE id = ?",
+        [itemId]
+      );
+
+      await connection.query(
+        'UPDATE product_variants SET stock_quantity = stock_quantity + ? WHERE id = ?',
+        [orderItem.quantity, orderItem.variant_id]
+      );
+
+      const [remainingItems] = await connection.query(
+        `SELECT SUM(subtotal) as total FROM order_items 
+         WHERE order_id = ? AND item_status != 'cancelled'`,
+        [orderId]
+      );
+      const remainingTotal = (remainingItems as any[])[0]?.total || 0;
+      const shippingCost = order.shipping_cost || 0;
+      const newOrderTotal = this.roundPrice(remainingTotal + shippingCost);
+
+      if (newOrderTotal === 0) {
+        await connection.query(
+          "UPDATE orders SET order_status = 'cancelled' WHERE id = ?",
+          [orderId]
+        );
+      } else {
+        const [nonCancelledItems] = await connection.query(
+          "SELECT COUNT(*) as count FROM order_items WHERE order_id = ? AND item_status != 'cancelled'",
+          [orderId]
+        );
+        const hasNonCancelled = (nonCancelledItems as any[])[0]?.count > 0;
+        
+        if (!hasNonCancelled) {
+          await connection.query(
+            "UPDATE orders SET order_status = 'cancelled' WHERE id = ?",
+            [orderId]
+          );
+        }
+      }
+
+      await connection.query(
+        'UPDATE orders SET total_amount = ? WHERE id = ?',
+        [newOrderTotal, orderId]
+      );
+    });
+
+    return this.getOrderItemDetail(itemId, orderId);
+  }
+
   async updateItemStatus(
     userId: number,
     orderId: number,

@@ -47,6 +47,12 @@ router.patch(
     orderController.cancelOrder
   );
 
+  router.patch(
+    '/:orderId/items/:itemId/cancel',
+    authMiddleware,
+    requireRole(['buyer']),
+    orderController.cancelItem
+  );
 
   router.patch(
     '/:orderId/items/:itemId/status',

@@ -39,6 +39,14 @@ export const orderController = {
     successResponse(res, order, 'Order cancelled successfully');
   }),
 
+  cancelItem: asyncHandler(async (req: Request, res: Response) => {
+    const userId = req.user!.id;
+    const orderId = parseInt(req.params.orderId as string, 10);
+    const itemId = parseInt(req.params.itemId as string, 10);
+    const item = await orderService.cancelItem(userId, orderId, itemId);
+    successResponse(res, item, 'Item cancelled successfully');
+  }),
+
   updateItemStatus: asyncHandler(async (req: Request, res: Response) => {
     const userId = req.user!.id;
     const orderId = parseInt(req.params.orderId as string, 10);
