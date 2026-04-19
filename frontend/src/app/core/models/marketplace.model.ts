@@ -362,3 +362,63 @@ export interface UpdateAddressRequest {
   country?: string;
   is_default?: boolean;
 }
+
+// Payment Models
+export interface PaymentIntent {
+  success: boolean;
+  paymentId: string;
+  amount: number;
+  currency: string;
+  status: 'pending' | 'completed' | 'failed';
+  clientToken: string;
+}
+
+export interface CardDetails {
+  cardNumber: string;
+  expiryMonth: string;
+  expiryYear: string;
+  cvv: string;
+  cardHolderName: string;
+}
+
+export interface PaymentConfirmation {
+  success: boolean;
+  paymentId: string;
+  status: 'completed' | 'failed';
+  transactionId?: string;
+  error?: string;
+  errorCode?: string;
+  timestamp?: string;
+}
+
+export interface PaymentProcessResult {
+  success: boolean;
+  paymentFailed?: boolean;
+  error?: string;
+  errorCode?: string;
+  payment?: PaymentConfirmation;
+  order?: OrderDetail;
+}
+
+export interface ProcessOrderPaymentRequest {
+  shippingAddressId: number;
+  shippingCost: number;
+  cardNumber: string;
+  expiryMonth: string;
+  expiryYear: string;
+  cvv: string;
+  cardHolderName: string;
+  amount: number;
+}
+
+export interface PaymentTransaction {
+  id: number;
+  orderId: number;
+  buyerId: number;
+  amount: number;
+  paymentMethod: string;
+  paymentGateway: string;
+  transactionReference: string;
+  status: string;
+  createdAt: Date;
+}

@@ -1003,3 +1003,217 @@
   color: #722F37;
   font-weight: 500;
 }
+
+/* Payment Form Styles */
+.payment-form {
+  background: #f9f9f9;
+  padding: 1.5rem;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+}
+
+.payment-form .form-group {
+  margin-bottom: 1rem;
+}
+
+.payment-form .form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #333;
+}
+
+.payment-form .form-group input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 1rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.payment-form .form-group input:focus {
+  outline: none;
+  border-color: #8b5a2b;
+  box-shadow: 0 0 0 3px rgba(139, 90, 43, 0.1);
+}
+
+.payment-form .form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.card-type-indicator {
+  margin-bottom: 1rem;
+}
+
+.card-type {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: #e7f3ff;
+  color: #0066cc;
+}
+
+.card-type.visa {
+  background: #1a1f71;
+  color: white;
+}
+
+.card-type.mastercard {
+  background: #eb001b;
+  color: white;
+}
+
+.card-type.amex {
+  background: #006fcf;
+  color: white;
+}
+
+.card-type.discover {
+  background: #ff6000;
+  color: white;
+}
+
+.card-type.unknown {
+  background: #666;
+  color: white;
+}
+
+.test-cards-info {
+  background: #fff3cd;
+  border: 1px solid #ffc107;
+  border-radius: 6px;
+  padding: 1rem;
+  margin: 1rem 0;
+}
+
+.test-hint {
+  margin: 0;
+  font-size: 0.875rem;
+  color: #856404;
+}
+
+.test-hint.failure {
+  margin-top: 0.5rem;
+  color: #721c24;
+}
+
+.test-hint strong {
+  font-weight: 600;
+}
+
+.payment-secure-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  background: #d4edda;
+  border-radius: 6px;
+  color: #155724;
+  font-size: 0.875rem;
+}
+
+.payment-secure-badge .lock-icon {
+  font-size: 1rem;
+}
+
+.pay-btn {
+  background: #28a745 !important;
+  color: white !important;
+}
+
+.pay-btn:hover:not(:disabled) {
+  background: #218838 !important;
+}
+
+.pay-btn:disabled {
+  background: #6c757d !important;
+}
+
+/* Payment Success Badge */
+.payment-success-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: #d4edda;
+  border-radius: 6px;
+  color: #155724;
+  font-weight: 500;
+  margin-bottom: 1.5rem;
+}
+
+.payment-success-badge .check-icon {
+  font-size: 1.25rem;
+  color: #28a745;
+}
+
+/* Order Details Summary in Payment Step */
+.order-details-summary {
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid #eee;
+}
+
+.order-details-summary h4 {
+  margin: 0 0 0.5rem;
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.order-details-summary p {
+  margin: 0.25rem 0;
+  font-size: 0.875rem;
+  color: #333;
+}
+
+/* Processing State */
+.processing-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.9);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.processing-spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #8b5a2b;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Step connector updates for 3 steps */
+.progress-steps {
+  max-width: 500px;
+}
+
+/* Responsive payment form */
+@media (max-width: 768px) {
+  .payment-form .form-row {
+    grid-template-columns: 1fr;
+  }
+  
+  .test-cards-info {
+    font-size: 0.8rem;
+  }
+}

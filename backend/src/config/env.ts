@@ -57,21 +57,17 @@ export const config = {
     refreshExpiresIn: getEnvVar('JWT_REFRESH_EXPIRES_IN', '7d', false),
   },
 
-  // File upload configuration
   upload: {
-    maxFileSize: parseInt(getEnvVar('MAX_FILE_SIZE', '5242880', false), 10), // 5MB
+    maxFileSize: parseInt(getEnvVar('MAX_FILE_SIZE', '5242880', false), 10), 
     maxFiles: parseInt(getEnvVar('MAX_FILES', '5', false), 10),
     uploadDir: getEnvVar('UPLOAD_DIR', './uploads/certifications', false),
-    // Split comma-separated string into array
     allowedTypes: getEnvVar('ALLOWED_FILE_TYPES', 'application/pdf', false)
       .split(',')
       .map(type => type.trim()),
   },
 
-  // CORS configuration
   cors: {
     frontendUrl: getEnvVar('FRONTEND_URL', 'http://localhost:4200', false),
-    // Split comma-separated origins into array
     allowedOrigins: getEnvVar(
       'ALLOWED_ORIGINS', 
       'http://localhost:4200,http://localhost:3000', 
@@ -81,25 +77,26 @@ export const config = {
       .map(origin => origin.trim()),
   },
 
-  // Rate limiting configuration
   rateLimit: {
-    windowMs: parseInt(getEnvVar('RATE_LIMIT_WINDOW_MS', '900000', false), 10), // 15 min
+    windowMs: parseInt(getEnvVar('RATE_LIMIT_WINDOW_MS', '900000', false), 10), 
     maxRequests: parseInt(getEnvVar('RATE_LIMIT_MAX_REQUESTS', '100', false), 10),
     loginMaxRequests: parseInt(getEnvVar('LOGIN_RATE_LIMIT_MAX', '5', false), 10),
   },
 
-  // Security configuration
   bcrypt: {
     rounds: parseInt(getEnvVar('BCRYPT_ROUNDS', '12', false), 10),
   },
+
+  // Payment gateway from beeceptor mock
+  payment: {
+    gatewayUrl: getEnvVar('PAYMENT_GATEWAY_URL', 'https://saffron-payments.free.beeceptor.com', false),
+    mode: getEnvVar('PAYMENT_MODE', 'mock', false) as 'mock' | 'live',
+  },
 } as const;
 
-// Type export for use in other modules
 export type Config = typeof config;
 
-// Validate critical config on module load
 const validateConfig = () => {
-  // Check JWT secret length
   if (config.jwt.secret.length < 32) {
     throw new Error(
       'JWT_SECRET must be at least 32 characters long for security.\n' +
@@ -107,7 +104,6 @@ const validateConfig = () => {
     );
   }
 
-  // Check bcrypt rounds are reasonable
   if (config.bcrypt.rounds < 10 || config.bcrypt.rounds > 14) {
     console.warn(
       'Warning: BCRYPT_ROUNDS should be between 10-14 for optimal security/performance balance. ' +
@@ -115,7 +111,6 @@ const validateConfig = () => {
     );
   }
 
-  // Check database connection limit
   if (config.database.connectionLimit < 5) {
     console.warn(
       'Warning: DB_CONNECTION_LIMIT is very low. Recommended minimum: 10. ' +
@@ -126,5 +121,4 @@ const validateConfig = () => {
   console.log('✓ Environment configuration validated successfully');
 };
 
-// Run validation when module is imported
 validateConfig();

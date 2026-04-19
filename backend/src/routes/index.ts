@@ -6,6 +6,7 @@ import orderRoutes from './order.routes';
 import marketplaceRoutes from './marketplace.routes';
 import reviewRoutes from './review.routes';
 import userRoutes from './user.routes';
+import paymentRoutes from './payment.routes';
 
 const router = Router();
 
@@ -16,6 +17,7 @@ router.use('/orders', orderRoutes);
 router.use('/marketplace', marketplaceRoutes);
 router.use('/reviews', reviewRoutes);
 router.use('/user', userRoutes);
+router.use('/payments', paymentRoutes);
 router.get('/health', (req, res) => {
   res.json({
     success: true,

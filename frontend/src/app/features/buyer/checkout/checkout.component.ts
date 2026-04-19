@@ -4,6 +4,7 @@ import { RouterModule, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { CartService } from '../../../core/services/cart.service';
 import { OrderService } from '../../../core/services/order.service';
+import { PaymentService } from '../../../core/services/payment.service';
 import { MarketplaceService } from '../../../core/services/marketplace.service';
 import { 
   CartSummary,
@@ -11,13 +12,15 @@ import {
   Address,
   OrderDetail,
   ApiResponse,
-  CreateAddressRequest
+  CreateAddressRequest,
+  ProcessOrderPaymentRequest,
+  PaymentProcessResult
 } from '../../../core/models/marketplace.model';
 import { LoadingSpinnerComponent, EmptyStateComponent } from '../../../shared/components';
 import { BuyerHeaderComponent } from '../shared/buyer-header/buyer-header.component';
 import { BuyerFooterComponent } from '../shared/buyer-footer/buyer-footer.component';
 
-type CheckoutStep = 'address' | 'review' | 'confirmation';
+type CheckoutStep = 'address' | 'review' | 'payment' | 'confirmation';
 
 interface ShippingMethod {
   id: string;
@@ -55,13 +58,13 @@ export class CheckoutComponent implements OnInit {
   orderConfirmation: OrderDetail | null = null;
 
   shippingMethods: ShippingMethod[] = [
-    { id: 'standard', name: 'Standard Shipping', description: 'Delivery in 5-7 business days', cost: 49, freeThreshold: 500, estimatedDays: '5-7 business days', icon: '📦' },
-    { id: 'express', name: 'Express Shipping', description: 'Delivery in 2-3 business days', cost: 99, freeThreshold: null, estimatedDays: '2-3 business days', icon: '🚚' },
-    { id: 'overnight', name: 'Overnight Delivery', description: 'Next business day delivery', cost: 199, freeThreshold: null, estimatedDays: 'Next business day', icon: '✈️' }
+    { id: 'standard', name: 'Standard Shipping', description: 'Delivery in 5-7 business days', cost: 49, freeThreshold: 500, estimatedDays: '5-7 business days', icon: '1' },
+    { id: 'express', name: 'Express Shipping', description: 'Delivery in 2-3 business days', cost: 99, freeThreshold: null, estimatedDays: '2-3 business days', icon: '2' },
+    { id: 'overnight', name: 'Overnight Delivery', description: 'Next business day delivery', cost: 199, freeThreshold: null, estimatedDays: 'Next business day', icon: '3' }
   ];
   selectedShippingMethod: ShippingMethod = this.shippingMethods[0];
 
-
+  // Address form
   showAddressForm = false;
   newAddress: CreateAddressRequest = {
     type: 'shipping',
@@ -74,9 +77,19 @@ export class CheckoutComponent implements OnInit {
   };
   addressFormError: string | null = null;
 
+  // Payment form
+  cardNumber = '';
+  expiryMonth = '';
+  expiryYear = '';
+  cvv = '';
+  cardHolderName = '';
+  paymentError: string | null = null;
+  processingPayment = false;
+
   constructor(
     private cartService: CartService,
     private orderService: OrderService,
+    private paymentService: PaymentService,
     private marketplaceService: MarketplaceService,
     private router: Router,
     private cdr: ChangeDetectorRef
@@ -225,31 +238,134 @@ export class CheckoutComponent implements OnInit {
     this.currentStep = 'review';
   }
 
+  proceedToPayment(): void {
+    this.error = null;
+    this.paymentError = null;
+    this.currentStep = 'payment';
+  }
+
   backToAddress(): void {
     this.currentStep = 'address';
     this.error = null;
   }
 
-  placeOrder(): void {
+  backToReview(): void {
+    this.currentStep = 'review';
+    this.paymentError = null;
+  }
+
+  // Format card number with spaces
+  onCardNumberInput(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    let value = input.value.replace(/\s/g, '').replace(/\D/g, '');
+    value = value.substring(0, 16);
+    const groups = value.match(/.{1,4}/g);
+    this.cardNumber = groups ? groups.join(' ') : value;
+  }
+
+  // Format expiry as MM/YY
+  onExpiryInput(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    let value = input.value.replace(/\D/g, '');
+    if (value.length >= 2) {
+      this.expiryMonth = value.substring(0, 2);
+      this.expiryYear = value.substring(2, 4);
+    } else {
+      this.expiryMonth = value;
+      this.expiryYear = '';
+    }
+  }
+
+  getExpiryDisplay(): string {
+    if (this.expiryMonth && this.expiryYear) {
+      return `${this.expiryMonth}/${this.expiryYear}`;
+    } else if (this.expiryMonth) {
+      return this.expiryMonth;
+    }
+    return '';
+  }
+
+  // Get card type for icon
+  getCardType(): string {
+    return this.paymentService.getCardType(this.cardNumber);
+  }
+
+  // Validate payment form
+  private validatePaymentForm(): boolean {
+    const cleanCardNumber = this.cardNumber.replace(/\s/g, '');
+    
+    if (!cleanCardNumber || cleanCardNumber.length < 13) {
+      this.paymentError = 'Please enter a valid card number';
+      return false;
+    }
+    
+    if (!this.expiryMonth || !this.expiryYear) {
+      this.paymentError = 'Please enter card expiry date';
+      return false;
+    }
+    
+    if (!this.paymentService.validateExpiry(this.expiryMonth, this.expiryYear)) {
+      this.paymentError = 'Card has expired or expiry date is invalid';
+      return false;
+    }
+    
+    if (!this.cvv || !this.paymentService.validateCVV(this.cvv)) {
+      this.paymentError = 'Please enter a valid CVV';
+      return false;
+    }
+    
+    if (!this.cardHolderName.trim()) {
+      this.paymentError = 'Please enter cardholder name';
+      return false;
+    }
+    
+    return true;
+  }
+
+  // Process payment
+  processPayment(): void {
+    if (!this.validatePaymentForm()) return;
     if (!this.selectedAddressId || !this.cart) return;
 
-    this.submitting = true;
-    this.error = null;
+    this.processingPayment = true;
+    this.paymentError = null;
 
-    const shippingCost = this.getShippingCost();
-    this.orderService.createOrder(this.selectedAddressId, shippingCost).subscribe({
-      next: (response: ApiResponse<OrderDetail>) => {
-        if (response.success && response.data) {
+    const request: ProcessOrderPaymentRequest = {
+      shippingAddressId: this.selectedAddressId,
+      shippingCost: this.getShippingCost(),
+      cardNumber: this.cardNumber.replace(/\s/g, ''),
+      expiryMonth: this.expiryMonth,
+      expiryYear: this.expiryYear,
+      cvv: this.cvv,
+      cardHolderName: this.cardHolderName,
+      amount: this.getTotalWithShipping()
+    };
+
+    this.paymentService.processOrderPayment(request).subscribe({
+      next: (response: ApiResponse<PaymentProcessResult>) => {
+        this.processingPayment = false;
+        
+        if (response.data?.success && response.data.order) {
+          // Payment successful. Redirect to orders page.
           this.router.navigate(['/buyer/orders']);
+        } else {
+          // Payment failed
+          this.paymentError = response.data?.error || 'Payment failed. Please try again.';
         }
-        this.submitting = false;
+        this.cdr.detectChanges();
       },
       error: (err) => {
-        this.error = err?.error?.message || 'Failed to place order. Please try again.';
-        this.submitting = false;
-        console.error('Error placing order:', err);
+        this.processingPayment = false;
+        this.paymentError = err?.error?.data?.error || err?.error?.message || 'Payment failed. Please try again.';
+        console.error('Payment error:', err);
+        this.cdr.detectChanges();
       }
     });
+  }
+
+  // Legacy method - kept for compatibility but now uses payment flow
+  placeOrder(): void {
+    this.proceedToPayment();
   }
 
   getSelectedAddress(): Address | null {
@@ -332,5 +448,12 @@ export class CheckoutComponent implements OnInit {
 
   continueShopping(): void {
     this.router.navigate(['/buyer/products']);
+  }
+
+  // Get masked card number for display
+  getMaskedCardNumber(): string {
+    const cleaned = this.cardNumber.replace(/\s/g, '');
+    if (cleaned.length < 4) return cleaned;
+    return '**** **** **** ' + cleaned.slice(-4);
   }
 }

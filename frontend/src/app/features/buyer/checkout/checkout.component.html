@@ -11,14 +11,19 @@
     </div>
 
     <div class="progress-steps" *ngIf="currentStep !== 'confirmation'">
-      <div class="step" [class.active]="currentStep === 'address'" [class.completed]="currentStep === 'review'">
+      <div class="step" [class.active]="currentStep === 'address'" [class.completed]="currentStep === 'review' || currentStep === 'payment'">
         <span class="step-number">1</span>
         <span class="step-label">Shipping</span>
       </div>
-      <div class="step-connector" [class.completed]="currentStep === 'review'"></div>
-      <div class="step" [class.active]="currentStep === 'review'">
+      <div class="step-connector" [class.completed]="currentStep === 'review' || currentStep === 'payment'"></div>
+      <div class="step" [class.active]="currentStep === 'review'" [class.completed]="currentStep === 'payment'">
         <span class="step-number">2</span>
-        <span class="step-label">Review & Pay</span>
+        <span class="step-label">Review</span>
+      </div>
+      <div class="step-connector" [class.completed]="currentStep === 'payment'"></div>
+      <div class="step" [class.active]="currentStep === 'payment'">
+        <span class="step-number">3</span>
+        <span class="step-label">Payment</span>
       </div>
     </div>
   </header>
@@ -301,25 +306,12 @@
           </div>
         </div>
 
-
-        <div class="review-section">
-          <h3>Payment</h3>
-          <div class="payment-info">
-            <p class="payment-note">
-              Payment will be processed securely after order confirmation.
-            </p>
-            <p class="demo-note">
-              <strong>Demo Payment</strong> 
-            </p>
-          </div>
-        </div>
-
         <div class="review-actions">
           <button class="back-btn" (click)="backToAddress()" [disabled]="submitting">
             Back
           </button>
-          <button class="place-order-btn" (click)="placeOrder()" [disabled]="submitting">
-            {{ submitting ? 'Processing...' : 'Place Order' }}
+          <button class="place-order-btn" (click)="proceedToPayment()" [disabled]="submitting">
+            Proceed to Payment
           </button>
         </div>
       </div>
@@ -347,6 +339,128 @@
       </aside>
     </div>
 
+    <!-- Payment Step -->
+    <div class="checkout-content" *ngIf="!loading && currentStep === 'payment' && cart">
+      <div class="checkout-form">
+        <h2>Payment Details</h2>
+
+        <div class="error-message" *ngIf="paymentError">
+          <span class="error-icon">!</span>
+          {{ paymentError }}
+        </div>
+
+        <div class="payment-form">
+          <div class="card-type-indicator" *ngIf="cardNumber">
+            <span class="card-type" [class]="getCardType()">
+              {{ getCardType() | uppercase }}
+            </span>
+          </div>
+
+          <div class="form-group">
+            <label for="cardNumber">Card Number *</label>
+            <input 
+              type="text" 
+              id="cardNumber" 
+              [value]="cardNumber"
+              (input)="onCardNumberInput($event)"
+              placeholder="1234 5678 9012 3456"
+              maxlength="19"
+              autocomplete="cc-number">
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="expiry">Expiry Date *</label>
+              <input 
+                type="text" 
+                id="expiry" 
+                [value]="getExpiryDisplay()"
+                (input)="onExpiryInput($event)"
+                placeholder="MM/YY"
+                maxlength="5"
+                autocomplete="cc-exp">
+            </div>
+            <div class="form-group">
+              <label for="cvv">CVV *</label>
+              <input 
+                type="password" 
+                id="cvv" 
+                [(ngModel)]="cvv"
+                placeholder="123"
+                maxlength="4"
+                autocomplete="cc-csc">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="cardHolderName">Cardholder Name *</label>
+            <input 
+              type="text" 
+              id="cardHolderName" 
+              [(ngModel)]="cardHolderName"
+              placeholder="John Doe"
+              autocomplete="cc-name">
+          </div>
+
+          <div class="test-cards-info">
+            <p class="test-hint">
+              <strong>Test Mode:</strong> Use any valid card number for success.
+            </p>
+            <p class="test-hint failure">
+              Use card ending in <strong>0000</strong> to simulate payment failure.
+            </p>
+          </div>
+
+          <div class="payment-secure-badge">
+            <span class="lock-icon">*</span>
+            <span>Your payment information is secure and encrypted</span>
+          </div>
+        </div>
+
+        <div class="review-actions">
+          <button class="back-btn" (click)="backToReview()" [disabled]="processingPayment">
+            Back
+          </button>
+          <button 
+            class="place-order-btn pay-btn" 
+            (click)="processPayment()" 
+            [disabled]="processingPayment">
+            {{ processingPayment ? 'Processing Payment...' : 'Pay ' + formatPrice(getTotalWithShipping()) }}
+          </button>
+        </div>
+      </div>
+
+      <aside class="order-summary">
+        <h2>Order Summary</h2>
+
+        <div class="summary-row">
+          <span>Items ({{ cart!.totalItems }})</span>
+          <span>{{ formatPrice(cart!.totalPrice) }}</span>
+        </div>
+
+        <div class="summary-row">
+          <span>Shipping</span>
+          <span *ngIf="getShippingCost() === 0" class="free-shipping">FREE</span>
+          <span *ngIf="getShippingCost() > 0">{{ formatPrice(getShippingCost()) }}</span>
+        </div>
+
+        <div class="summary-divider"></div>
+
+        <div class="summary-row total">
+          <span>Total to Pay</span>
+          <span>{{ formatPrice(getTotalWithShipping()) }}</span>
+        </div>
+
+        <div class="order-details-summary">
+          <h4>Shipping To</h4>
+          <div *ngIf="getSelectedAddress() as address">
+            <p>{{ address.street }}</p>
+            <p>{{ address.city }}, {{ address.state }}</p>
+          </div>
+        </div>
+      </aside>
+    </div>
+
     <div class="confirmation-content" *ngIf="currentStep === 'confirmation' && orderConfirmation">
       <div class="confirmation-card">
         <div class="success-icon">&#10003;</div>
@@ -354,8 +468,13 @@
         <p class="order-number">Order #{{ orderConfirmation.order.orderNumber }}</p>
         
         <div class="confirmation-details">
-          <p>We've received your order and will begin processing it shortly.</p>
+          <p>We've received your order and payment successfully.</p>
           <p>You will receive an email confirmation with tracking details.</p>
+        </div>
+
+        <div class="payment-success-badge">
+          <span class="check-icon">&#10003;</span>
+          <span>Payment Successful</span>
         </div>
 
         <div class="order-summary-brief">

@@ -125,6 +125,13 @@ export class InsufficientStockError extends Error {
   }
 }
 
+export class BadRequestError extends Error {
+  constructor(message: string = 'Bad request') {
+    super(message);
+    this.name = 'BadRequestError';
+  }
+}
+
 export class DatabaseError extends Error {
   constructor(message: string = 'Database error') {
     super(message);
