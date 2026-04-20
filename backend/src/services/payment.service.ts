@@ -34,6 +34,15 @@ export interface PaymentStatus {
   status: 'pending' | 'completed' | 'failed';
 }
 
+export interface RefundResult {
+  success: boolean;
+  refundId: string;
+  status: 'completed' | 'failed';
+  timestamp?: string;
+  error?: string;
+  errorCode?: string;
+}
+
 export interface PaymentTransaction {
   id: number;
   orderId: number;
@@ -54,6 +63,15 @@ interface BeeceptorPaymentResponse {
   status: string;
   clientToken: string;
   transactionId?: string;
+  timestamp?: string;
+  error?: string;
+  errorCode?: string;
+}
+
+interface BeeceptorRefundResponse {
+  success: boolean;
+  refundId: string;
+  status: string;
   timestamp?: string;
   error?: string;
   errorCode?: string;
@@ -227,6 +245,65 @@ class PaymentService {
     }
   }
 
+  async refundPayment(
+    transactionReference: string,
+    amount: number,
+    reason: string = 'order_cancelled'
+  ): Promise<RefundResult> {
+    try {
+      const response = await fetch(`${this.gatewayUrl}/api/payments/refund`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          transactionReference,
+          amount,
+          reason,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({})) as Partial<BeeceptorRefundResponse>;
+        return {
+          success: false,
+          refundId: errorData.refundId || `refund_${Date.now()}`,
+          status: 'failed',
+          error: errorData.error || 'Refund failed',
+          errorCode: errorData.errorCode || 'REFUND_FAILED',
+          timestamp: errorData.timestamp,
+        };
+      }
+
+      const data = await response.json() as BeeceptorRefundResponse;
+      return {
+        success: data.success,
+        refundId: data.refundId,
+        status: data.status as 'completed' | 'failed',
+        timestamp: data.timestamp,
+        error: data.error,
+        errorCode: data.errorCode,
+      };
+    } catch (error) {
+      console.error('Refund error:', error);
+      if (this.paymentMode === 'mock') {
+        return {
+          success: true,
+          refundId: `refund_${Date.now()}_${Math.random().toString(36).substring(7)}`,
+          status: 'completed',
+          timestamp: new Date().toISOString(),
+        };
+      }
+      return {
+        success: false,
+        refundId: `refund_${Date.now()}`,
+        status: 'failed',
+        error: 'Payment gateway unavailable',
+        errorCode: 'GATEWAY_UNAVAILABLE',
+      };
+    }
+  }
+
   async recordTransaction(
     orderId: number,
     buyerId: number,
@@ -251,6 +328,48 @@ class PaymentService {
 
     const insertId = (result as any).insertId;
     
+    const [rows] = await pool.query(
+      'SELECT * FROM payment_transactions WHERE id = ?',
+      [insertId]
+    );
+
+    const transaction = (rows as any[])[0];
+    return {
+      id: transaction.id,
+      orderId: transaction.order_id,
+      buyerId: transaction.buyer_id,
+      amount: transaction.amount,
+      paymentMethod: transaction.payment_method,
+      paymentGateway: transaction.payment_gateway,
+      transactionReference: transaction.transaction_reference,
+      status: transaction.status,
+      createdAt: transaction.created_at,
+    };
+  }
+
+  async recordRefundTransaction(
+    orderId: number,
+    buyerId: number,
+    amount: number,
+    refund: RefundResult
+  ): Promise<PaymentTransaction> {
+    const status: 'pending' | 'success' | 'failed' = refund.success ? 'success' : 'failed';
+    const [result] = await pool.query(
+      `INSERT INTO payment_transactions 
+       (order_id, buyer_id, amount, payment_method, payment_gateway, transaction_reference, status)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [
+        orderId,
+        buyerId,
+        amount,
+        'refund',
+        'beeceptor_mock',
+        refund.refundId,
+        status,
+      ]
+    );
+
+    const insertId = (result as any).insertId;
     const [rows] = await pool.query(
       'SELECT * FROM payment_transactions WHERE id = ?',
       [insertId]
@@ -306,7 +425,6 @@ export const paymentService = new PaymentService();
 
 
  
-
 
 
 

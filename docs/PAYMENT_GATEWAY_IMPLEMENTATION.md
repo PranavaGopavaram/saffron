@@ -96,6 +96,34 @@ This document outlines the implementation plan for integrating a mock payment ga
 }
 ```
 
+#### Rule 4: Refund Payment
+
+| Setting | Value |
+|---------|-------|
+| Method | `POST` |
+| Path | `/api/payments/refund` |
+
+**Success Response (Status 200):**
+```json
+{
+  "success": true,
+  "refundId": "refund_{{uuid}}",
+  "status": "completed",
+  "timestamp": "{{isoTimestamp}}"
+}
+```
+
+**Failure Response (Status 400)** (optional):
+```json
+{
+  "success": false,
+  "refundId": "refund_{{uuid}}",
+  "status": "failed",
+  "error": "Refund failed",
+  "errorCode": "REFUND_FAILED"
+}
+```
+
 ---
 
 ## Phase 2: Backend Implementation

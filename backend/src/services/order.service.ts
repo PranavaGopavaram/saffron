@@ -13,6 +13,7 @@ import {
   NotFoundError,
   ForbiddenError,
 } from '../utils/api-response';
+import { paymentService } from './payment.service';
 
 class OrderService extends MarketplaceBaseService {
   
@@ -228,6 +229,27 @@ class OrderService extends MarketplaceBaseService {
         `Cannot cancel order with status '${order.order_status}'. Only pending or confirmed orders can be cancelled.`
       );
     }
+
+    // If payment was completed, trigger refund via gateway and record it.
+    if (order.payment_status === 'completed') {
+      const [txRows] = await pool.query(
+        `SELECT * FROM payment_transactions 
+         WHERE order_id = ? AND payment_method = 'card' AND status = 'success'
+         ORDER BY created_at DESC
+         LIMIT 1`,
+        [orderId]
+      );
+      const paymentTx = (txRows as any[])[0];
+
+      if (paymentTx?.transaction_reference) {
+        const refund = await paymentService.refundPayment(
+          paymentTx.transaction_reference,
+          order.total_amount,
+          'order_cancelled'
+        );
+        await paymentService.recordRefundTransaction(orderId, buyerId, order.total_amount, refund);
+      }
+    }
    
     const [itemRows] = await pool.query(
       'SELECT variant_id, quantity FROM order_items WHERE order_id = ?',
@@ -330,6 +352,27 @@ class OrderService extends MarketplaceBaseService {
         [newOrderTotal, orderId]
       );
     });
+
+    // Partial refund for item cancellation (if payment was completed)
+    if (order.payment_status === 'completed' && orderItem.subtotal > 0) {
+      const [txRows] = await pool.query(
+        `SELECT * FROM payment_transactions 
+         WHERE order_id = ? AND payment_method = 'card' AND status = 'success'
+         ORDER BY created_at DESC
+         LIMIT 1`,
+        [orderId]
+      );
+      const paymentTx = (txRows as any[])[0];
+
+      if (paymentTx?.transaction_reference) {
+        const refund = await paymentService.refundPayment(
+          paymentTx.transaction_reference,
+          orderItem.subtotal,
+          'item_cancelled'
+        );
+        await paymentService.recordRefundTransaction(orderId, buyerId, orderItem.subtotal, refund);
+      }
+    }
 
     return this.getOrderItemDetail(itemId, orderId);
   }
