@@ -4,7 +4,14 @@
   <div class="dashboard-content">
     <div *ngIf="loading()" class="loading">Loading dashboard...</div>
 
-    <div *ngIf="!loading()">
+    <div *ngIf="!loading() && error()" class="error">
+      <div class="error-card">
+        <p class="error-message">{{ error() }}</p>
+        <button type="button" class="retry-btn" (click)="reload()">Try Again</button>
+      </div>
+    </div>
+
+    <div *ngIf="!loading() && !error()">
       <section class="profile-section">
         <div class="profile-card">
           <div class="profile-info">
@@ -27,7 +34,11 @@
             <span class="stat-value">{{ orderStats().pending }}</span>
             <span class="stat-label">Pending</span>
           </div>
-          
+          <div class="stat-card confirmed" routerLink="/buyer/orders" [queryParams]="{status: 'pending'}">
+            <span class="stat-value">{{ orderStats().confirmed }}</span>
+            <span class="stat-label">Confirmed</span>
+          </div>
+           
           <div class="stat-card shipped" routerLink="/buyer/orders" [queryParams]="{status: 'shipped'}">
             <span class="stat-value">{{ orderStats().shipped }}</span>
             <span class="stat-label">Shipped</span>
@@ -54,7 +65,13 @@
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let order of recentOrders()" [routerLink]="['/buyer/orders', order.id]">
+            <tr
+              *ngFor="let order of recentOrders()"
+              [routerLink]="
+                order.firstItemId
+                  ? ['/buyer/orders', order.id, 'items', order.firstItemId]
+                  : ['/buyer/orders']
+              ">
               <td>#{{ order.id }}</td>
               <td>{{ formatDate(order.createdAt) }}</td>
               <td><span class="status-badge" [ngClass]="getStatusClass(order.orderStatus)">{{ order.orderStatus }}</span></td>

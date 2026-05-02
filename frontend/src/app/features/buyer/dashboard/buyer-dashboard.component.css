@@ -21,6 +21,41 @@
   color: #666;
 }
 
+.error {
+  padding: 2rem 0;
+}
+
+.error-card {
+  background: #F5ECD7;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(92, 20, 29, 0.1);
+  padding: 1.5rem;
+  text-align: center;
+  border: 1px solid #E8D5A3;
+}
+
+.error-message {
+  margin: 0 0 1rem 0;
+  color: #5c141d;
+  font-weight: 600;
+}
+
+.retry-btn {
+  background: #722F37;
+  color: #F5ECD7;
+  border: none;
+  padding: 0.75rem 1.25rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: transform 0.2s, background 0.2s;
+}
+
+.retry-btn:hover {
+  background: #5c141d;
+  transform: translateY(-1px);
+}
+
 .profile-section {
   margin-bottom: 2rem;
 }
@@ -85,7 +120,7 @@ section h2 {
 
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 1rem;
 }
 

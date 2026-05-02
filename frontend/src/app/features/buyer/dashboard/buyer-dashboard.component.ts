@@ -41,12 +41,20 @@ export class BuyerDashboardComponent implements OnInit {
   recentOrders = signal<OrderSummary[]>([]);
   spending = signal<SpendingSummary>({ totalSpent: 0, last30Days: 0, avgOrder: 0 });
   loading = signal(true);
+  error = signal<string | null>(null);
 
   ngOnInit(): void {
     this.loadDashboardData();
   }
 
+  reload(): void {
+    this.loadDashboardData();
+  }
+
   private loadDashboardData(): void {
+    this.loading.set(true);
+    this.error.set(null);
+
     forkJoin({
       userProfile: this.userService.getProfile(),
       buyerProfile: this.marketplaceService.getBuyerProfile(),
@@ -66,7 +74,7 @@ export class BuyerDashboardComponent implements OnInit {
           // Use backend-calculated spending stats
           this.spending.set({
             totalSpent: bp.totalSpent || 0,
-            last30Days: this.calculateThisMonthSpending(results.orders),
+            last30Days: this.calculateLast30DaysSpendingFromResponse(results.orders),
             avgOrder: bp.averageOrderValue || 0
           });
         }
@@ -82,7 +90,10 @@ export class BuyerDashboardComponent implements OnInit {
           // Calculate order stats by status
           this.orderStats.set({
             total: totalFromProfile,
-            pending: orders.filter((o: OrderSummary) => o.orderStatus === 'pending').length,
+            // Match the Orders page: "Pending" includes both pending and confirmed.
+            pending: orders.filter((o: OrderSummary) =>
+              o.orderStatus === 'pending' || o.orderStatus === 'confirmed'
+            ).length,
             confirmed: orders.filter((o: OrderSummary) => o.orderStatus === 'confirmed').length,
             shipped: orders.filter((o: OrderSummary) => o.orderStatus === 'shipped').length,
             delivered: orders.filter((o: OrderSummary) => o.orderStatus === 'delivered').length
@@ -97,7 +108,7 @@ export class BuyerDashboardComponent implements OnInit {
           // If buyer profile didn't have spending data, calculate from orders
           if (!this.buyerProfile()?.totalSpent) {
             const totalSpent = orders.reduce((sum: number, o: OrderSummary) => sum + Number(o.totalAmount), 0);
-            const last30Days = this.calculateThisMonthFromOrders(orders);
+            const last30Days = this.calculateLast30DaysFromOrders(orders);
             this.spending.set({
               totalSpent,
               last30Days,
@@ -110,12 +121,13 @@ export class BuyerDashboardComponent implements OnInit {
       },
       error: (err) => {
         console.error('Error loading dashboard:', err);
+        this.error.set('Failed to load dashboard. Please try again.');
         this.loading.set(false);
       }
     });
   }
 
-  private calculateThisMonthSpending(ordersResponse: any): number {
+  private calculateLast30DaysSpendingFromResponse(ordersResponse: any): number {
     if (!ordersResponse.success || !ordersResponse.data?.data) {
       return 0;
     }
@@ -131,15 +143,6 @@ export class BuyerDashboardComponent implements OnInit {
       return d >= thirtyDaysAgo && d <= now;
     });
     return last30DaysOrders.reduce((sum: number, o: OrderSummary) => sum + Number(o.totalAmount), 0);
-  }
-
-  private calculateThisMonthFromOrders(orders: OrderSummary[]): number {
-    const now = new Date();
-    const thisMonthOrders = orders.filter((o: OrderSummary) => {
-      const d = new Date(o.createdAt);
-      return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
-    });
-    return thisMonthOrders.reduce((sum: number, o: OrderSummary) => sum + Number(o.totalAmount), 0);
   }
 
   formatPrice(price: number): string {
