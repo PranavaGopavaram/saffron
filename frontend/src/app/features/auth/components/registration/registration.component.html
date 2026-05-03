@@ -1,34 +1,38 @@
-<div class="registration-container">
-  <!-- Left Section -->
-  <div class="left-panel">
-    <img src="assets/saffron.png" alt="Saffron Flower" />
-  </div>
+<div class="auth-page">
+  <div class="auth-shell">
+    <section class="auth-media" aria-label="Saffron image">
+      <div class="auth-media-inner">
+        <img src="assets/saffron.png" alt="Saffron Flower" />
+        <p class="auth-media-tagline">Saffron Marketplace</p>
+      </div>
+    </section>
 
-  <!-- Right Section -->
-  <div class="right-panel">
-    <h1>CREATE YOUR ACCOUNT</h1>
+    <main class="auth-panel" aria-label="Registration">
+      <div class="auth-card">
+        <header class="auth-head">
+          <p class="auth-kicker">Create an account</p>
+          <h1 class="auth-title">Join the marketplace</h1>
+          <p class="auth-subtitle">Buyers get access to curated saffron. Sellers get tools to sell with trust.</p>
+        </header>
 
-    <!-- Error Message -->
-    <div class="error-banner" *ngIf="errorMessage">
-      {{ errorMessage }}
-    </div>
+        <div class="banner banner-error" *ngIf="errorMessage">{{ errorMessage }}</div>
+        <div class="banner banner-success" *ngIf="successMessage">{{ successMessage }}</div>
 
-    <!-- Success Message -->
-    <div class="success-banner" *ngIf="successMessage">
-      ✅ {{ successMessage }}
-    </div>
-
-    <!-- Registration Form -->
-    <form [formGroup]="registrationForm" (ngSubmit)="onSubmit()">
+        <!-- Registration Form -->
+        <form class="auth-form" [formGroup]="registrationForm" (ngSubmit)="onSubmit()">
       
       <!-- Section 1: Basic Information -->
       <div class="form-section">
-        <input 
-          formControlName="fullName" 
-          type="text"
-          placeholder="Full Name" 
-          [class.invalid]="hasError('fullName')"
-        />
+        <label class="field">
+          <span class="label">Full name</span>
+          <input
+            formControlName="fullName"
+            type="text"
+            placeholder="Your name"
+            [class.invalid]="hasError('fullName')"
+            autocomplete="name"
+          />
+        </label>
         <div class="error" *ngIf="hasError('fullName', 'required')">
           Full name is required
         </div>
@@ -36,12 +40,16 @@
           Full name must be at least 2 characters
         </div>
 
-        <input 
-          formControlName="email" 
-          type="email"
-          placeholder="Email Address" 
-          [class.invalid]="hasError('email')"
-        />
+        <label class="field">
+          <span class="label">Email</span>
+          <input
+            formControlName="email"
+            type="email"
+            placeholder="you@example.com"
+            [class.invalid]="hasError('email')"
+            autocomplete="email"
+          />
+        </label>
         <div class="error" *ngIf="hasError('email', 'required')">
           Email is required
         </div>
@@ -50,8 +58,9 @@
         </div>
 
         <div class="select-wrapper">
+          <span class="label">Role</span>
           <select formControlName="role" [class.invalid]="hasError('role')">
-            <option value="" disabled>Select Role</option>
+            <option value="" disabled>Select role</option>
             <option value="buyer">Buyer</option>
             <option value="seller">Seller</option>
           </select>
@@ -63,56 +72,71 @@
 
       <!-- Section 2: Buyer-Specific Fields -->
       <ng-container *ngIf="currentRole === 'buyer'">
-        <div class="form-section buyer-section">
-          <h3 class="section-title">Contact Information</h3>
+          <div class="form-section buyer-section">
+            <h3 class="section-title">Contact Information</h3>
           
-          <input 
-            formControlName="phone" 
-            type="tel"
-            placeholder="Phone Number" 
-            [class.invalid]="hasError('phone')"
-          />
+            <label class="field">
+              <span class="label">Phone</span>
+              <input
+                formControlName="phone"
+                type="tel"
+                placeholder="Phone number"
+                [class.invalid]="hasError('phone')"
+                autocomplete="tel"
+              />
+            </label>
           <div class="error" *ngIf="hasError('phone')">
             Phone number is required
           </div>
 
-          <input 
-            formControlName="companyName" 
-            type="text"
-            placeholder="Company Name (Optional)" 
-          />
+            <label class="field">
+              <span class="label">Company (optional)</span>
+              <input formControlName="companyName" type="text" placeholder="Company name" />
+            </label>
 
           <h3 class="section-title">Shipping Address</h3>
           
-          <input 
-            formControlName="shippingStreet" 
-            type="text"
-            placeholder="Street Address" 
-            [class.invalid]="hasError('shippingStreet')"
-          />
+            <label class="field">
+              <span class="label">Street</span>
+              <input
+                formControlName="shippingStreet"
+                type="text"
+                placeholder="Street address"
+                [class.invalid]="hasError('shippingStreet')"
+                autocomplete="shipping street-address"
+              />
+            </label>
           <div class="error" *ngIf="hasError('shippingStreet')">
             Street address is required
           </div>
 
           <div class="form-row">
             <div class="form-col">
-              <input 
-                formControlName="shippingCity" 
-                type="text"
-                placeholder="City" 
-                [class.invalid]="hasError('shippingCity')"
-              />
+                <label class="field">
+                  <span class="label">City</span>
+                  <input
+                    formControlName="shippingCity"
+                    type="text"
+                    placeholder="City"
+                    [class.invalid]="hasError('shippingCity')"
+                    autocomplete="shipping address-level2"
+                  />
+                </label>
               <div class="error" *ngIf="hasError('shippingCity')">
                 City is required
               </div>
             </div>
             <div class="form-col">
-              <input 
-                formControlName="shippingState" 
-                type="text"
-                placeholder="State/Province" 
-                [class.invalid]="hasError('shippingState')"
-              />
+                <label class="field">
+                  <span class="label">State / Province</span>
+                  <input
+                    formControlName="shippingState"
+                    type="text"
+                    placeholder="State/Province"
+                    [class.invalid]="hasError('shippingState')"
+                    autocomplete="shipping address-level1"
+                  />
+                </label>
               <div class="error" *ngIf="hasError('shippingState')">
                 State is required
               </div>
@@ -121,23 +145,31 @@
 
           <div class="form-row">
             <div class="form-col">
-              <input 
-                formControlName="shippingZip" 
-                type="text"
-                placeholder="Zip/Postal Code" 
-                [class.invalid]="hasError('shippingZip')"
-              />
+                <label class="field">
+                  <span class="label">ZIP / Postal code</span>
+                  <input
+                    formControlName="shippingZip"
+                    type="text"
+                    placeholder="Zip/Postal code"
+                    [class.invalid]="hasError('shippingZip')"
+                    autocomplete="shipping postal-code"
+                  />
+                </label>
               <div class="error" *ngIf="hasError('shippingZip')">
                 Zip code is required
               </div>
             </div>
             <div class="form-col">
-              <input 
-                formControlName="shippingCountry" 
-                type="text"
-                placeholder="Country" 
-                [class.invalid]="hasError('shippingCountry')"
-              />
+                <label class="field">
+                  <span class="label">Country</span>
+                  <input
+                    formControlName="shippingCountry"
+                    type="text"
+                    placeholder="Country"
+                    [class.invalid]="hasError('shippingCountry')"
+                    autocomplete="shipping country-name"
+                  />
+                </label>
               <div class="error" *ngIf="hasError('shippingCountry')">
                 Country is required
               </div>
@@ -148,60 +180,77 @@
 
       <!-- Section 3: Seller-Specific Fields -->
       <ng-container *ngIf="currentRole === 'seller'">
-        <div class="form-section seller-section">
-          <h3 class="section-title">Contact Information</h3>
+          <div class="form-section seller-section">
+            <h3 class="section-title">Contact Information</h3>
           
-          <input 
-            formControlName="phone" 
-            type="tel"
-            placeholder="Phone Number" 
-            [class.invalid]="hasError('phone')"
-          />
+            <label class="field">
+              <span class="label">Phone</span>
+              <input
+                formControlName="phone"
+                type="tel"
+                placeholder="Phone number"
+                [class.invalid]="hasError('phone')"
+                autocomplete="tel"
+              />
+            </label>
           <div class="error" *ngIf="hasError('phone')">
             Phone number is required
           </div>
 
-          <input 
-            formControlName="businessName" 
-            type="text"
-            placeholder="Business Name" 
-            [class.invalid]="hasError('businessName')"
-          />
+            <label class="field">
+              <span class="label">Business name</span>
+              <input
+                formControlName="businessName"
+                type="text"
+                placeholder="Business name"
+                [class.invalid]="hasError('businessName')"
+                autocomplete="organization"
+              />
+            </label>
           <div class="error" *ngIf="hasError('businessName')">
             Business name is required
           </div>
 
           <h3 class="section-title">Business Address</h3>
           
-          <input 
-            formControlName="businessStreet" 
-            type="text"
-            placeholder="Street Address" 
-            [class.invalid]="hasError('businessStreet')"
-          />
+            <label class="field">
+              <span class="label">Street</span>
+              <input
+                formControlName="businessStreet"
+                type="text"
+                placeholder="Street address"
+                [class.invalid]="hasError('businessStreet')"
+              />
+            </label>
           <div class="error" *ngIf="hasError('businessStreet')">
             Street address is required
           </div>
 
           <div class="form-row">
             <div class="form-col">
-              <input 
-                formControlName="businessCity" 
-                type="text"
-                placeholder="City" 
-                [class.invalid]="hasError('businessCity')"
-              />
+                <label class="field">
+                  <span class="label">City</span>
+                  <input
+                    formControlName="businessCity"
+                    type="text"
+                    placeholder="City"
+                    [class.invalid]="hasError('businessCity')"
+                  />
+                </label>
               <div class="error" *ngIf="hasError('businessCity')">
                 City is required
               </div>
             </div>
             <div class="form-col">
-              <input 
-                formControlName="businessState" 
-                type="text"
-                placeholder="State/Province" 
-                [class.invalid]="hasError('businessState')"
-              />
+                <label class="field">
+                  <span class="label">State / Province</span>
+                  <input
+                    formControlName="businessState"
+                    type="text"
+                    placeholder="State/Province"
+                    [class.invalid]="hasError('businessState')"
+                  />
+                </label>
               <div class="error" *ngIf="hasError('businessState')">
                 State is required
               </div>
@@ -210,23 +259,29 @@
 
           <div class="form-row">
             <div class="form-col">
-              <input 
-                formControlName="businessZip" 
-                type="text"
-                placeholder="Zip/Postal Code" 
-                [class.invalid]="hasError('businessZip')"
-              />
+                <label class="field">
+                  <span class="label">ZIP / Postal code</span>
+                  <input
+                    formControlName="businessZip"
+                    type="text"
+                    placeholder="Zip/Postal code"
+                    [class.invalid]="hasError('businessZip')"
+                  />
+                </label>
               <div class="error" *ngIf="hasError('businessZip')">
                 Zip code is required
               </div>
             </div>
             <div class="form-col">
-              <input 
-                formControlName="businessCountry" 
-                type="text"
-                placeholder="Country" 
-                [class.invalid]="hasError('businessCountry')"
-              />
+                <label class="field">
+                  <span class="label">Country</span>
+                  <input
+                    formControlName="businessCountry"
+                    type="text"
+                    placeholder="Country"
+                    [class.invalid]="hasError('businessCountry')"
+                  />
+                </label>
               <div class="error" *ngIf="hasError('businessCountry')">
                 Country is required
               </div>
@@ -235,22 +290,28 @@
 
           <h3 class="section-title">Verification Details</h3>
           
-          <input 
-            formControlName="taxId" 
-            type="text"
-            placeholder="Tax ID / Business License Number" 
-            [class.invalid]="hasError('taxId')"
-          />
+            <label class="field">
+              <span class="label">Tax ID / License</span>
+              <input
+                formControlName="taxId"
+                type="text"
+                placeholder="Tax ID / Business license number"
+                [class.invalid]="hasError('taxId')"
+              />
+            </label>
           <div class="error" *ngIf="hasError('taxId')">
             Tax ID / Business License is required
           </div>
 
-          <textarea 
-            formControlName="saffronSource" 
-            placeholder="Saffron Source/Origin (Describe your saffron source, farm location, etc.)" 
-            rows="4"
-            [class.invalid]="hasError('saffronSource')"
-          ></textarea>
+            <label class="field">
+              <span class="label">Saffron source / origin</span>
+              <textarea
+                formControlName="saffronSource"
+                placeholder="Describe your source, farm location, certifications, and process"
+                rows="4"
+                [class.invalid]="hasError('saffronSource')"
+              ></textarea>
+            </label>
           <div class="error" *ngIf="hasError('saffronSource', 'required')">
             Saffron source information is required
           </div>
@@ -296,12 +357,16 @@
       <div class="form-section password-section">
         <h3 class="section-title">Security</h3>
         
-        <input 
-          formControlName="password" 
-          type="password"
-          placeholder="Password (Minimum 6 characters)" 
-          [class.invalid]="hasError('password')"
-        />
+        <label class="field">
+          <span class="label">Password</span>
+          <input
+            formControlName="password"
+            type="password"
+            placeholder="Minimum 6 characters"
+            [class.invalid]="hasError('password')"
+            autocomplete="new-password"
+          />
+        </label>
         <div class="error" *ngIf="hasError('password', 'required')">
           Password is required
         </div>
@@ -309,12 +374,16 @@
           Password must be at least 6 characters
         </div>
 
-        <input 
-          formControlName="confirmPassword" 
-          type="password"
-          placeholder="Confirm Password" 
-          [class.invalid]="hasError('confirmPassword') || hasPasswordMismatch()"
-        />
+        <label class="field">
+          <span class="label">Confirm password</span>
+          <input
+            formControlName="confirmPassword"
+            type="password"
+            placeholder="Confirm password"
+            [class.invalid]="hasError('confirmPassword') || hasPasswordMismatch()"
+            autocomplete="new-password"
+          />
+        </label>
         <div class="error" *ngIf="hasError('confirmPassword', 'required')">
           Please confirm your password
         </div>
@@ -324,19 +393,19 @@
       </div>
 
       <!-- Submit Button -->
-      <button 
-        type="submit" 
-        class="signup-btn" 
-        [disabled]="isLoading"
-        [class.loading]="isLoading"
-      >
-        <span *ngIf="!isLoading">SIGN UP</span>
-        <span *ngIf="isLoading">SIGNING UP...</span>
+      <button type="submit" class="primary" [disabled]="isLoading">
+        <span *ngIf="!isLoading">Create account</span>
+        <span *ngIf="isLoading">Creating...</span>
       </button>
     </form>
 
-    <p class="login-link">
-      Already have an account? <a routerLink="/auth/login">Log in</a>
-    </p>
+      <p class="auth-foot">
+        Already have an account?
+        <a routerLink="/auth/login">Sign in</a>
+      </p>
+      </div>
+    </main>
   </div>
+
+  <app-buyer-footer></app-buyer-footer>
 </div>

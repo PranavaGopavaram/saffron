@@ -4,20 +4,20 @@
   
   <div class="footer-main">
     <div class="footer-brand">
-      <span class="brand-icon"> ࣪˖ ִֶཐི༏ཋྀ</span>
+      <span class="brand-icon" aria-hidden="true">SM</span>
       <span class="brand-text">Saffron Marketplace</span>
     </div>
     
     <nav class="footer-nav">
       <a routerLink="/buyer/about">About Us</a>
       <span class="nav-divider">|</span>
-      <a href="#">Origin Certification</a>
+      <a routerLink="/contact-us">Contact Us</a>
       <span class="nav-divider">|</span>
-      <a href="#">Privacy Policy</a>
+      <a routerLink="/privacy-policy">Privacy Policy</a>
     </nav>
     
     <div class="footer-copyright">
-      <p>© 2026 Saffron Marketplace. All rights reserved.</p>
+      <p>© {{ currentYear }} Saffron Marketplace. All rights reserved.</p>
     </div>
   </div>
 </footer>

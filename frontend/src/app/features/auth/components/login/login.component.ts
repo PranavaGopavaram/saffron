@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
+import { BuyerFooterComponent } from '../../../buyer/shared/buyer-footer/buyer-footer.component';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [CommonModule, FormsModule, RouterModule, BuyerFooterComponent],
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.css']
 })
@@ -79,6 +80,10 @@ export class LoginComponent {
 
   goToRegister(): void {
     this.router.navigate(['/auth/registration']);
+  }
+
+  onForgotPassword(): void {
+    this.router.navigate(['/auth/forgot-password']);
   }
 
   private isValidEmail(email: string): boolean {

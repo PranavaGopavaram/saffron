@@ -1,62 +1,69 @@
-<div class="login-container">
-    <!-- Left Section -->
-    <div class="left-panel">
-      <img src="assets/saffron.png" alt="Saffron Flower" />
-    </div>
-  
-    <!-- Right Section -->
-    <div class="right-panel">
-      <h1>WELCOME BACK</h1>
-
-      <!-- Error Message -->
-      <div class="error-message" *ngIf="errorMessage">
-        ❌ {{ errorMessage }}
+<div class="auth-page">
+  <div class="auth-shell">
+    <section class="auth-media" aria-label="Saffron image">
+      <div class="auth-media-inner">
+        <img src="assets/saffron.png" alt="Saffron Flower" />
+        <p class="auth-media-tagline">Saffron Marketplace</p>
       </div>
+    </section>
 
-      <!-- Success Message -->
-      <div class="success-message" *ngIf="successMessage">
-        ✅ {{ successMessage }}
+    <main class="auth-panel" aria-label="Login">
+      <div class="auth-card">
+        <header class="auth-head">
+          <p class="auth-kicker">Welcome back</p>
+          <h1 class="auth-title">Sign in</h1>
+          <p class="auth-subtitle">Continue your journey from thread to table.</p>
+        </header>
+
+        <div class="banner banner-error" *ngIf="errorMessage">{{ errorMessage }}</div>
+        <div class="banner banner-success" *ngIf="successMessage">{{ successMessage }}</div>
+
+        <form class="auth-form" (ngSubmit)="onLogin()">
+          <label class="field">
+            <span class="label">Email</span>
+            <input
+              type="email"
+              placeholder="you@example.com"
+              [(ngModel)]="email"
+              name="email"
+              [disabled]="isLoading"
+              required
+              autocomplete="email"
+            />
+          </label>
+
+          <label class="field">
+            <span class="label">Password</span>
+            <input
+              type="password"
+              placeholder="Your password"
+              [(ngModel)]="password"
+              name="password"
+              [disabled]="isLoading"
+              required
+              autocomplete="current-password"
+            />
+          </label>
+
+          <div class="auth-row">
+            <button class="link" type="button" (click)="onForgotPassword()" [disabled]="isLoading">
+              Forgot password?
+            </button>
+          </div>
+
+          <button type="submit" class="primary" [disabled]="isLoading">
+            <span *ngIf="!isLoading">Sign in</span>
+            <span *ngIf="isLoading">Signing in...</span>
+          </button>
+        </form>
+
+        <p class="auth-foot">
+          New here?
+          <a routerLink="/auth/registration">Create an account</a>
+        </p>
       </div>
-  
-      <!-- Login Form -->
-      <form (ngSubmit)="onLogin()">
-        <input 
-          type="email" 
-          placeholder="Email Address" 
-          [(ngModel)]="email"
-          name="email"
-          [disabled]="isLoading"
-          required
-        />
-        <input 
-          type="password" 
-          placeholder="Password"
-          [(ngModel)]="password"
-          name="password"
-          [disabled]="isLoading"
-          required
-        />
-  
-        <a class="forgot">Forgot Password?</a>
-  
-        <button 
-          type="submit" 
-          class="login-btn"
-          [disabled]="isLoading"
-        >
-          <span *ngIf="!isLoading">LOG IN</span>
-          <span *ngIf="isLoading">LOGGING IN...</span>
-        </button>
-      </form>
-
-      <!-- Loading Spinner -->
-      <div class="loading-spinner" *ngIf="isLoading">
-        <div class="spinner"></div>
-      </div>
-
-      <p class="signup-link">
-        Don't have an account? <a routerLink="/auth/registration">Sign up</a>
-      </p>
-    </div>
+    </main>
   </div>
-  
+
+  <app-buyer-footer></app-buyer-footer>
+</div>

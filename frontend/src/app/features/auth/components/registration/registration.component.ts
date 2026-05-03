@@ -4,11 +4,12 @@ import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, AbstractContro
 import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { RegistrationData, BuyerRegistration, SellerRegistration } from '../../../../core/models/user.model';
+import { BuyerFooterComponent } from '../../../buyer/shared/buyer-footer/buyer-footer.component';
 
 @Component({
   selector: 'app-registration',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterModule],
+  imports: [CommonModule, ReactiveFormsModule, RouterModule, BuyerFooterComponent],
   templateUrl: './registration.component.html',
   styleUrls: ['./registration.component.css']
 })
